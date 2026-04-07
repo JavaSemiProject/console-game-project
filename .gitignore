@@ -1,2 +1,6 @@
 ERD.sql
 GAME_DESIGN.md
+
+# Compiled class files
+bin/
+out/
