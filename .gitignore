@@ -1,2 +1,18 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Build output
+bin/
+out/
+
+# VS Code
+.vscode/
+
+# External libraries
+lib/*.jar
+
+# Design docs (already ignored)
 ERD.sql
 GAME_DESIGN.md
+*.xlsx
