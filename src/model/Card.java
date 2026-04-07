@@ -7,9 +7,11 @@ interface CardEffect {
 
 class AttackEffect implements CardEffect {
     private int power;
+    private Card card;
     
-    public AttackEffect(int power) {
+    public AttackEffect(int power, Card card) {
         this.power = power;
+        this.card = card;
     }
     
     public int execute(Entity user, Entity target) {
@@ -19,15 +21,17 @@ class AttackEffect implements CardEffect {
     }
     
     public String getDescription() {
-        return power + " 데미지 공격";
+        return String.format("%s 대상에게 %d의 대미지를 입힌다.", card.getCDesc(), power);
     }
 }
 
 class HealEffect implements CardEffect {
     private int healAmount;
+    private Card card;
     
-    public HealEffect(int healAmount) {
+    public HealEffect(int healAmount, Card card) {
         this.healAmount = healAmount;
+        this.card = card;
     }
     
     public int execute(Entity user, Entity target) {
@@ -38,7 +42,28 @@ class HealEffect implements CardEffect {
     }
     
     public String getDescription() {
-        return "HP " + healAmount + " 회복";
+        return String.format("%s %d만큼 체력을 회복한다.", card.getCDesc(), healAmount);
+    }
+}
+
+class maxHpIncreaseEffect implements CardEffect {
+    private int increaseAmount;
+    private Card card;
+
+    public maxHpIncreaseEffect(int increaseAmount, Card card) {
+        this.increaseAmount = increaseAmount;
+        this.card = card;
+    }
+
+    public int execute(Entity user, Entity target) {
+        int newHp = Math.min(user.getCurrentHealth() + increaseAmount, 100);
+        user.setCurrentHealth(newHp);
+        System.out.println(">> 최대 체력이 " + increaseAmount + "만큼 증가했다!");
+        return increaseAmount;
+    }
+
+    public String getDescription() {
+        return String.format("%s 최대 체력이 %d만큼 증가한다.", card.getCDesc(), increaseAmount);
     }
 }
 
@@ -54,18 +79,45 @@ public class Card {
     private int tryNum;      // 최초 획득 트라이
     private CardEffect effect;
 
-    public Card(String cId, int pp, String cName, String method, int cPower,
-                String cDesc, String cUseMsg, String cImg, int tryNum, CardEffect effect) {
-        this.cId = cId;
-        this.pp = pp;
-        this.cName = cName;
-        this.method = method;
-        this.cPower = cPower;
-        this.cDesc = cDesc;
-        this.cUseMsg = cUseMsg;
-        this.cImg = cImg;
-        this.tryNum = tryNum;
-        this.effect = effect;
+    private Card(Builder builder) {
+        this.cId = builder.cId;
+        this.pp = builder.pp;
+        this.cName = builder.cName;
+        this.method = builder.method;
+        this.cPower = builder.cPower;
+        this.cDesc = builder.cDesc;
+        this.cUseMsg = builder.cUseMsg;
+        this.cImg = builder.cImg;
+        this.tryNum = builder.tryNum;
+        this.effect = builder.effect;
+    }
+
+    public static class Builder {
+        private String cId;
+        private int pp;
+        private String cName;
+        private String method;
+        private int cPower;
+        private String cDesc;
+        private String cUseMsg;
+        private String cImg;
+        private int tryNum;
+        private CardEffect effect;
+
+        public Builder cId(String cId) { this.cId = cId; return this; }
+        public Builder pp(int pp) { this.pp = pp; return this; }
+        public Builder cName(String cName) { this.cName = cName; return this; }
+        public Builder method(String method) { this.method = method; return this; }
+        public Builder cPower(int cPower) { this.cPower = cPower; return this; }
+        public Builder cDesc(String cDesc) { this.cDesc = cDesc; return this; }
+        public Builder cUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; return this; }
+        public Builder cImg(String cImg) { this.cImg = cImg; return this; }
+        public Builder tryNum(int tryNum) { this.tryNum = tryNum; return this; }
+        public Builder effect(CardEffect effect) { this.effect = effect; return this; }
+
+        public Card build() {
+            return new Card(this);
+        }
     }
 
     // --- Getters ---
