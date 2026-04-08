@@ -1,16 +1,16 @@
 package model;
 
 public interface Entity {
-    // --- Getters ---
+    public void takeDamage(int damage);
+    public void boostPower(int amount);
+    public void heal(int amount);
+    public void increaseMaxHealth(int amount);
 
     public int getHealth();
     public int getCurrentHealth();
     public int getPowerMin();
     public int getPowerMax();
     public int getPp();
-    public String getCId();
-
-    // --- Setters ---
 
     public void setHealth(int health);
     public void setCurrentHealth(int currentHealth);
@@ -18,9 +18,6 @@ public interface Entity {
     public void setPowerMax(int powerMax);
     public void setPp(int pp);
     public void setCId(String cId);
-
-
-    public void takeDamage(int power);
 }
 
 class Hero implements Entity {
@@ -42,11 +39,6 @@ class Hero implements Entity {
         this.cId = cId;
     }
 
-    // 공격 시 powerMin~powerMax 범위의 랜덤 데미지 반환
-    public int getAttackDamage() {
-        return (int) (Math.random() * (powerMax - powerMin + 1)) + powerMin;
-    }
-
     public boolean isAlive() {
         return currentHealth > 0;
     }
@@ -62,13 +54,12 @@ class Hero implements Entity {
     // 아이템으로 최대 체력 증가
     public void increaseMaxHealth(int amount) {
         health += amount;
-        currentHealth += amount;
     }
 
     // 아이템으로 공격력 버프
     public void boostPower(int amount) {
-        powerMin += amount;
-        powerMax += amount;
+        powerMin = Math.max(50, powerMin + amount);
+        powerMax = Math.max(50, powerMax + amount);
     }
 
     // --- Getters ---
@@ -124,17 +115,27 @@ class NPC implements Entity {
         this.cId = cId;
     }
 
-    // 공격 시 powerMin~powerMax 범위의 랜덤 데미지 반환
-    public int getAttackDamage() {
-        return (int) (Math.random() * (powerMax - powerMin + 1)) + powerMin;
-    }
-
     public boolean isAlive() {
         return currentHealth > 0;
     }
 
     public void takeDamage(int damage) {
         currentHealth = Math.max(0, currentHealth - damage);
+    }
+
+    public void heal(int amount) {
+        currentHealth = Math.min(health, currentHealth + amount);
+    }
+
+    // 아이템으로 최대 체력 증가
+    public void increaseMaxHealth(int amount) {
+        health += amount;
+    }
+
+    // 아이템으로 공격력 버프
+    public void boostPower(int amount) {
+        powerMin = Math.max(50, powerMin + amount);
+        powerMax = Math.max(50, powerMax + amount);
     }
 
     // --- Getters ---

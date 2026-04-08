@@ -1,0 +1,155 @@
+package model;
+
+interface ItemEffect {
+    int execute(Entity user);
+    String getDescription();  // 효과 설명 (UI 출력용)
+}
+
+class BoostPowerEffect implements ItemEffect {
+    private int power;
+    private Item item;
+
+    public BoostPowerEffect(int power, Item item) {
+        this.power = power;
+        this.item = item;
+    }
+
+    public int execute(Entity user) {
+        user.takeDamage(power);
+        System.out.println(">> " + power + " 데미지를 입혔다!");
+        return power;
+    }
+
+    public String getDescription() {
+        return String.format("%s 대상에게 %d의 대미지를 입힌다.", item.getCDesc(), power);
+    }
+}
+
+class ItemHealEffect implements ItemEffect {
+    private int healAmount;
+    private Item item;
+
+    public ItemHealEffect(int healAmount, Item item) {
+        this.healAmount = healAmount;
+        this.item = item;
+    }
+
+    public int execute(Entity user) {
+        int newHp = Math.min(user.getCurrentHealth() + healAmount, user.getHealth());
+        user.setCurrentHealth(newHp);
+        System.out.println(">> HP를 " + healAmount + "만큼 회복했다!");
+        return healAmount;
+    }
+
+    public String getDescription() {
+        return String.format("%s %d만큼 체력을 회복한다.", item.getCDesc(), healAmount);
+    }
+}
+
+class ItemMaxHpIncreaseEffect implements ItemEffect {
+    private int increaseAmount;
+    private Item item;
+
+    public ItemMaxHpIncreaseEffect(int increaseAmount, Item item) {
+        this.increaseAmount = increaseAmount;
+        this.item = item;
+    }
+
+    public int execute(Entity user) {
+        int newHp = Math.min(user.getCurrentHealth() + increaseAmount, 100);
+        user.setCurrentHealth(newHp);
+        System.out.println(">> 최대 체력이 " + increaseAmount + "만큼 증가했다!");
+        return increaseAmount;
+    }
+
+    public String getDescription() {
+        return String.format("%s 최대 체력이 %d만큼 증가한다.", item.getCDesc(), increaseAmount);
+    }
+}
+
+public class Item {
+    private String cId;
+    private int pp;          // 조사 키 (particle)
+    private String cName;    // 카드 이름 (메서드 이름)
+    private String method;   // 발동 메시지
+    private int cPower;      // 공격력
+    private String cDesc;    // 카드 설명
+    private String cUseMsg;  // 카드 사용 시 메시지 (nullable)
+    private String cImg;     // 카드 이미지 (nullable)
+    private int tryNum;      // 최초 획득 트라이
+    private ItemEffect effect;
+
+    private Item(Builder builder) {
+        this.cId = builder.cId;
+        this.pp = builder.pp;
+        this.cName = builder.cName;
+        this.method = builder.method;
+        this.cPower = builder.cPower;
+        this.cDesc = builder.cDesc;
+        this.cUseMsg = builder.cUseMsg;
+        this.cImg = builder.cImg;
+        this.tryNum = builder.tryNum;
+        this.effect = builder.effect;
+    }
+
+    public static class Builder {
+        private String cId;
+        private int pp;
+        private String cName;
+        private String method;
+        private int cPower;
+        private String cDesc;
+        private String cUseMsg;
+        private String cImg;
+        private int tryNum;
+        private ItemEffect effect;
+
+        public Builder cId(String cId) { this.cId = cId; return this; }
+        public Builder pp(int pp) { this.pp = pp; return this; }
+        public Builder cName(String cName) { this.cName = cName; return this; }
+        public Builder method(String method) { this.method = method; return this; }
+        public Builder cPower(int cPower) { this.cPower = cPower; return this; }
+        public Builder cDesc(String cDesc) { this.cDesc = cDesc; return this; }
+        public Builder cUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; return this; }
+        public Builder cImg(String cImg) { this.cImg = cImg; return this; }
+        public Builder tryNum(int tryNum) { this.tryNum = tryNum; return this; }
+        public Builder effect(ItemEffect effect) { this.effect = effect; return this; }
+
+        public Item build() {
+            return new Item(this);
+        }
+    }
+
+    // --- Getters ---
+
+    public String getCId() { return cId; }
+    public int getPp() { return pp; }
+    public String getCName() { return cName; }
+    public String getMethod() { return method; }
+    public int getCPower() { return cPower; }
+    public String getCDesc() { return cDesc; }
+    public String getCUseMsg() { return cUseMsg; }
+    public String getCImg() { return cImg; }
+    public int getTryNum() { return tryNum; }
+
+    // --- Setters ---
+
+    public void setCId(String cId) { this.cId = cId; }
+    public void setPp(int pp) { this.pp = pp; }
+    public void setCName(String cName) { this.cName = cName; }
+    public void setMethod(String method) { this.method = method; }
+    public void setCPower(int cPower) { this.cPower = cPower; }
+    public void setCDesc(String cDesc) { this.cDesc = cDesc; }
+    public void setCUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; }
+    public void setCImg(String cImg) { this.cImg = cImg; }
+    public void setTryNum(int tryNum) { this.tryNum = tryNum; }
+
+    @Override
+    public String toString() {
+        return "[CARD:" + cId + "] " + cName + " (ATK:" + cPower + ") - " + cDesc;
+    }
+
+    public int use(Entity user) {
+        return effect.execute(user);
+    }
+}
