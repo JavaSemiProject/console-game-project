@@ -20,6 +20,7 @@ GAME_DESIGN.md
 # Compiled class files
 bin/
 out/
+*.class
 
 # IDE setting files
 .idea/

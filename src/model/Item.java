@@ -2,7 +2,7 @@ package model;
 
 interface ItemEffect {
     int execute(Entity user);
-    String getDescription();  // 효과 설명 (UI 출력용)
+    String getDescription();
 }
 
 class BoostPowerEffect implements ItemEffect {
@@ -15,13 +15,13 @@ class BoostPowerEffect implements ItemEffect {
     }
 
     public int execute(Entity user) {
-        user.takeDamage(power);
-        System.out.println(">> " + power + " 데미지를 입혔다!");
+        user.boostPower(power);
+        System.out.println(">> 공격력이 " + power + "만큼 증가했다!");
         return power;
     }
 
     public String getDescription() {
-        return String.format("%s 대상에게 %d의 대미지를 입힌다.", item.getCDesc(), power);
+        return String.format("%s 공격력이 %d만큼 증가한다.", item.getIName(), power);
     }
 }
 
@@ -35,14 +35,13 @@ class ItemHealEffect implements ItemEffect {
     }
 
     public int execute(Entity user) {
-        int newHp = Math.min(user.getCurrentHealth() + healAmount, user.getHealth());
-        user.setCurrentHealth(newHp);
+        user.heal(healAmount);
         System.out.println(">> HP를 " + healAmount + "만큼 회복했다!");
         return healAmount;
     }
 
     public String getDescription() {
-        return String.format("%s %d만큼 체력을 회복한다.", item.getCDesc(), healAmount);
+        return String.format("%s %d만큼 체력을 회복한다.", item.getIName(), healAmount);
     }
 }
 
@@ -56,63 +55,66 @@ class ItemMaxHpIncreaseEffect implements ItemEffect {
     }
 
     public int execute(Entity user) {
-        int newHp = Math.min(user.getCurrentHealth() + increaseAmount, 100);
-        user.setCurrentHealth(newHp);
+        user.increaseMaxHealth(increaseAmount);
         System.out.println(">> 최대 체력이 " + increaseAmount + "만큼 증가했다!");
         return increaseAmount;
     }
 
     public String getDescription() {
-        return String.format("%s 최대 체력이 %d만큼 증가한다.", item.getCDesc(), increaseAmount);
+        return String.format("%s 최대 체력이 %d만큼 증가한다.", item.getIName(), increaseAmount);
     }
 }
 
 public class Item {
-    private String cId;
-    private int pp;          // 조사 키 (particle)
-    private String cName;    // 카드 이름 (메서드 이름)
-    private String method;   // 발동 메시지
-    private int cPower;      // 공격력
-    private String cDesc;    // 카드 설명
-    private String cUseMsg;  // 카드 사용 시 메시지 (nullable)
-    private String cImg;     // 카드 이미지 (nullable)
-    private int tryNum;      // 최초 획득 트라이
+    private String iId;
+    private String iName;
+    private int heal;
+    private int power;
+    private int hp;              // 최대 체력 증가량
+    private String iDesc;
+    private String iUseMsg;
+    private String iImg;
+    private int tryNum;
+    private int pp;
     private ItemEffect effect;
 
     private Item(Builder builder) {
-        this.cId = builder.cId;
-        this.pp = builder.pp;
-        this.cName = builder.cName;
-        this.method = builder.method;
-        this.cPower = builder.cPower;
-        this.cDesc = builder.cDesc;
-        this.cUseMsg = builder.cUseMsg;
-        this.cImg = builder.cImg;
+        this.iId = builder.iId;
+        this.iName = builder.iName;
+        this.heal = builder.heal;
+        this.power = builder.power;
+        this.hp = builder.hp;
+        this.iDesc = builder.iDesc;
+        this.iUseMsg = builder.iUseMsg;
+        this.iImg = builder.iImg;
         this.tryNum = builder.tryNum;
+        this.pp = builder.pp;
         this.effect = builder.effect;
     }
 
     public static class Builder {
-        private String cId;
-        private int pp;
-        private String cName;
-        private String method;
-        private int cPower;
-        private String cDesc;
-        private String cUseMsg;
-        private String cImg;
+        private String iId;
+        private String iName;
+        private int heal;
+        private int power;
+        private int hp;
+        private String iDesc;
+        private String iUseMsg;
+        private String iImg;
         private int tryNum;
+        private int pp;
         private ItemEffect effect;
 
-        public Builder cId(String cId) { this.cId = cId; return this; }
-        public Builder pp(int pp) { this.pp = pp; return this; }
-        public Builder cName(String cName) { this.cName = cName; return this; }
-        public Builder method(String method) { this.method = method; return this; }
-        public Builder cPower(int cPower) { this.cPower = cPower; return this; }
-        public Builder cDesc(String cDesc) { this.cDesc = cDesc; return this; }
-        public Builder cUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; return this; }
-        public Builder cImg(String cImg) { this.cImg = cImg; return this; }
+        public Builder iId(String iId) { this.iId = iId; return this; }
+        public Builder iName(String iName) { this.iName = iName; return this; }
+        public Builder heal(int heal) { this.heal = heal; return this; }
+        public Builder power(int power) { this.power = power; return this; }
+        public Builder hp(int hp) { this.hp = hp; return this; }
+        public Builder iDesc(String iDesc) { this.iDesc = iDesc; return this; }
+        public Builder iUseMsg(String iUseMsg) { this.iUseMsg = iUseMsg; return this; }
+        public Builder iImg(String iImg) { this.iImg = iImg; return this; }
         public Builder tryNum(int tryNum) { this.tryNum = tryNum; return this; }
+        public Builder pp(int pp) { this.pp = pp; return this; }
         public Builder effect(ItemEffect effect) { this.effect = effect; return this; }
 
         public Item build() {
@@ -122,31 +124,34 @@ public class Item {
 
     // --- Getters ---
 
-    public String getCId() { return cId; }
-    public int getPp() { return pp; }
-    public String getCName() { return cName; }
-    public String getMethod() { return method; }
-    public int getCPower() { return cPower; }
-    public String getCDesc() { return cDesc; }
-    public String getCUseMsg() { return cUseMsg; }
-    public String getCImg() { return cImg; }
+    public String getIId() { return iId; }
+    public String getIName() { return iName; }
+    public int getHeal() { return heal; }
+    public int getPower() { return power; }
+    public int getHp() { return hp; }
+    public String getIDesc() { return iDesc; }
+    public String getIUseMsg() { return iUseMsg; }
+    public String getIImg() { return iImg; }
     public int getTryNum() { return tryNum; }
+    public int getPp() { return pp; }
 
     // --- Setters ---
 
-    public void setCId(String cId) { this.cId = cId; }
-    public void setPp(int pp) { this.pp = pp; }
-    public void setCName(String cName) { this.cName = cName; }
-    public void setMethod(String method) { this.method = method; }
-    public void setCPower(int cPower) { this.cPower = cPower; }
-    public void setCDesc(String cDesc) { this.cDesc = cDesc; }
-    public void setCUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; }
-    public void setCImg(String cImg) { this.cImg = cImg; }
+    public void setIId(String iId) { this.iId = iId; }
+    public void setIName(String iName) { this.iName = iName; }
+    public void setHeal(int heal) { this.heal = heal; }
+    public void setPower(int power) { this.power = power; }
+    public void setHp(int hp) { this.hp = hp; }
+    public void setIDesc(String iDesc) { this.iDesc = iDesc; }
+    public void setIUseMsg(String iUseMsg) { this.iUseMsg = iUseMsg; }
+    public void setIImg(String iImg) { this.iImg = iImg; }
     public void setTryNum(int tryNum) { this.tryNum = tryNum; }
+    public void setPp(int pp) { this.pp = pp; }
 
     @Override
     public String toString() {
-        return "[CARD:" + cId + "] " + cName + " (ATK:" + cPower + ") - " + cDesc;
+        return "[ITEM:" + iId + "] " + iName +
+                " (회복:" + heal + " 공격:" + power + " HP:" + hp + ") - " + iDesc;
     }
 
     public int use(Entity user) {
