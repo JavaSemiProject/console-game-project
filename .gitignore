@@ -16,3 +16,10 @@ lib/*.jar
 ERD.sql
 GAME_DESIGN.md
 *.xlsx
+
+# Compiled class files
+bin/
+out/
+
+# IDE setting files
+.idea/
