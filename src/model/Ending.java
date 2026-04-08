@@ -1,34 +1,44 @@
 package model;
 
 public class Ending {
-    private int endingId;
-    private String endingName;
-    private String endingType;  // NORMAL / HIDDEN / TRUE
-    private String description;
+    private String eId;
+    private String eName;
+    private String eDesc;
+    private String eImg;
+    private int tryNum;      // 엔딩 해금 트라이 (0 = 미해금)
+    private int eCount;      // 엔딩 본 횟수
 
-    public Ending(int endingId, String endingName, String endingType, String description) {
-        this.endingId = endingId;
-        this.endingName = endingName;
-        this.endingType = endingType;
-        this.description = description;
+    public Ending(String eId, String eName, String eDesc, String eImg, int tryNum, int eCount) {
+        this.eId = eId;
+        this.eName = eName;
+        this.eDesc = eDesc;
+        this.eImg = eImg;
+        this.tryNum = tryNum;
+        this.eCount = eCount;
     }
 
     // --- Getters ---
 
-    public int getEndingId() { return endingId; }
-    public String getEndingName() { return endingName; }
-    public String getEndingType() { return endingType; }
-    public String getDescription() { return description; }
+    public String getEId() { return eId; }
+    public String getEName() { return eName; }
+    public String getEDesc() { return eDesc; }
+    public String getEImg() { return eImg; }
+    public int getTryNum() { return tryNum; }
+    public int getECount() { return eCount; }
 
     // --- Setters ---
 
-    public void setEndingId(int endingId) { this.endingId = endingId; }
-    public void setEndingName(String endingName) { this.endingName = endingName; }
-    public void setEndingType(String endingType) { this.endingType = endingType; }
-    public void setDescription(String description) { this.description = description; }
+    public void setEId(String eId) { this.eId = eId; }
+    public void setEName(String eName) { this.eName = eName; }
+    public void setEDesc(String eDesc) { this.eDesc = eDesc; }
+    public void setEImg(String eImg) { this.eImg = eImg; }
+    public void setTryNum(int tryNum) { this.tryNum = tryNum; }
+    public void setECount(int eCount) { this.eCount = eCount; }
 
     @Override
     public String toString() {
-        return "[ENDING:" + endingId + "] " + endingName + " (" + endingType + ")";
+        return "[ENDING:" + eId + "] " + eName +
+                (tryNum > 0 ? " [해금 - " + tryNum + "트라이]" : " [미해금]") +
+                " (열람 " + eCount + "회)";
     }
 }
