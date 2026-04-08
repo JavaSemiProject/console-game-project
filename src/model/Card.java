@@ -25,47 +25,48 @@ class AttackEffect implements CardEffect {
     }
 }
 
-class HealEffect implements CardEffect {
-    private int healAmount;
-    private Card card;
-    
-    public HealEffect(int healAmount, Card card) {
-        this.healAmount = healAmount;
-        this.card = card;
-    }
-    
-    public int execute(Entity user, Entity target) {
-        int newHp = Math.min(user.getCurrentHealth() + healAmount, 100);
-        user.setCurrentHealth(newHp);
-        System.out.println(">> HP를 " + healAmount + "만큼 회복했다!");
-        return healAmount;
-    }
-    
-    public String getDescription() {
-        return String.format("%s %d만큼 체력을 회복한다.", card.getCDesc(), healAmount);
-    }
-}
-
-class maxHpIncreaseEffect implements CardEffect {
-    private int increaseAmount;
-    private Card card;
-
-    public maxHpIncreaseEffect(int increaseAmount, Card card) {
-        this.increaseAmount = increaseAmount;
-        this.card = card;
-    }
-
-    public int execute(Entity user, Entity target) {
-        int newHp = Math.min(user.getCurrentHealth() + increaseAmount, 100);
-        user.setCurrentHealth(newHp);
-        System.out.println(">> 최대 체력이 " + increaseAmount + "만큼 증가했다!");
-        return increaseAmount;
-    }
-
-    public String getDescription() {
-        return String.format("%s 최대 체력이 %d만큼 증가한다.", card.getCDesc(), increaseAmount);
-    }
-}
+// 나머지 카드 효과는 보류
+//class HealEffect implements CardEffect {
+//    private int healAmount;
+//    private Card card;
+//
+//    public HealEffect(int healAmount, Card card) {
+//        this.healAmount = healAmount;
+//        this.card = card;
+//    }
+//
+//    public int execute(Entity user, Entity target) {
+//        int newHp = Math.min(user.getCurrentHealth() + healAmount, 100);
+//        user.setCurrentHealth(newHp);
+//        System.out.println(">> HP를 " + healAmount + "만큼 회복했다!");
+//        return healAmount;
+//    }
+//
+//    public String getDescription() {
+//        return String.format("%s %d만큼 체력을 회복한다.", card.getCDesc(), healAmount);
+//    }
+//}
+//
+//class maxHpIncreaseEffect implements CardEffect {
+//    private int increaseAmount;
+//    private Card card;
+//
+//    public maxHpIncreaseEffect(int increaseAmount, Card card) {
+//        this.increaseAmount = increaseAmount;
+//        this.card = card;
+//    }
+//
+//    public int execute(Entity user, Entity target) {
+//        int newHp = Math.min(user.getCurrentHealth() + increaseAmount, 100);
+//        user.setCurrentHealth(newHp);
+//        System.out.println(">> 최대 체력이 " + increaseAmount + "만큼 증가했다!");
+//        return increaseAmount;
+//    }
+//
+//    public String getDescription() {
+//        return String.format("%s 최대 체력이 %d만큼 증가한다.", card.getCDesc(), increaseAmount);
+//    }
+//}
 
 public class Card {
     private String cId;
