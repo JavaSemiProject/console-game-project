@@ -144,6 +144,7 @@ public class Card {
     public void setCUseMsg(String cUseMsg) { this.cUseMsg = cUseMsg; }
     public void setCImg(String cImg) { this.cImg = cImg; }
     public void setTryNum(int tryNum) { this.tryNum = tryNum; }
+    public void setEffect(CardEffect effect) { this.effect = effect; }
 
     @Override
     public String toString() {
