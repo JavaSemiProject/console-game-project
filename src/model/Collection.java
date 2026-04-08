@@ -33,6 +33,7 @@ public class Collection {
     public int getContentId() { return contentId; }
     public boolean isUnlocked() { return isUnlocked; }
     public Timestamp getUnlockedAt() { return unlockedAt; }
+    public int getFirstTry() { return firstTry; }
 
     // --- Setters ---
 

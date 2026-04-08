@@ -1,6 +1,6 @@
 package model;
 
-class NPC implements Entity {
+public class NPC implements Entity {
     private String nId;
     private String nName;
     private String nDesc;
