@@ -59,12 +59,14 @@ public class BattleManager {
 
             // 적 사망 체크
             if (enemy.getCurrentHealth() <= 0) {
+                gameView.showBattleStatus(player, enemy, enemyName);
                 gameView.showBattleWin(enemyName);
                 return BattleResult.WIN;
             }
 
-            // --- 적 턴 ---
+            // --- 적 턴 (HP바 갱신 후 공격 결과 표시) ---
             int enemyDamage = enemyCard.use(enemy, player);
+            gameView.showBattleStatus(player, enemy, enemyName);
             gameView.showAttackResult(enemyName, enemyCard.getCName(), enemyDamage);
 
             // 플레이어 사망 체크
