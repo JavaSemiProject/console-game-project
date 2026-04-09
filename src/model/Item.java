@@ -158,4 +158,29 @@ public class Item {
     public int use(Entity user) {
         return effect.execute(user);
     }
+
+    public static Item createItem(String iId, String iName, int heal, int power, int hp,
+                                  String iDesc, String iUseMsg, String iImg, int tryNum, int pp) {
+        ItemEffect effect = null;
+        if (heal > 0) {
+            effect = new ItemHealEffect(heal, null);
+        } else if (power > 0) {
+            effect = new BoostPowerEffect(power, null);
+        } else if (hp > 0) {
+            effect = new ItemMaxHpIncreaseEffect(hp, null);
+        }
+        return new Item.Builder()
+            .iId(iId)
+            .iName(iName)
+            .heal(heal)
+            .power(power)
+            .hp(hp)
+            .iDesc(iDesc)
+            .iUseMsg(iUseMsg)
+            .iImg(iImg)
+            .tryNum(tryNum)
+            .pp(pp)
+            .effect(effect)
+            .build();
+    }
 }
