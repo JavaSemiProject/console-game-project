@@ -4,6 +4,8 @@ import manager.BattleManager.BattleResult;
 import manager.EventManager.EventResult;
 import model.Card;
 import model.Item;
+import view.GameView;
+import view.MainMenuView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,14 +46,23 @@ public class GameManager {
     private BattleManager battleManager;
     private EventManager eventManager;
     private StoryManager storyManager;
+    private CollectionManager collectionManager;
     // TODO: private StageManager stageManager;
     // TODO: private SaveManager saveManager;
 
-    public GameManager() {
-        this.scanner = new Scanner(System.in);
-        this.battleManager = new BattleManager(scanner);
+    // 뷰
+    private GameView gameView;
+    private MainMenuView menuView;
+
+    public GameManager(Scanner scanner, GameView gameView, MainMenuView menuView) {
+        this.scanner = scanner;
+        this.gameView = gameView;
+        this.menuView = menuView;
+
+        this.battleManager = new BattleManager(gameView);
         this.eventManager = new EventManager();
         this.storyManager = new StoryManager();
+        this.collectionManager = new CollectionManager(gameView);
 
         this.state = GameState.MAIN_MENU;
         this.hasSemicolon = false;
@@ -63,11 +74,9 @@ public class GameManager {
     // 메인 게임 루프
     // ============================================
     public void run() {
-        // 스토리 파일 로드
         storyManager.loadAll("resources/story");
 
         while (state != GameState.GAME_OVER) {
-            // EventManager에 현재 상태 동기화
             eventManager.updateState(hasSemicolon, hasBracket);
 
             switch (state) {
@@ -92,24 +101,17 @@ public class GameManager {
     // 메인 메뉴
     // ============================================
     private void showMainMenu() {
-        // TODO: MainMenuView로 출력 위임
-        System.out.println("1. 새 게임");
-        System.out.println("2. 이어하기");
-        System.out.println("3. 도감");
-        System.out.println("4. 종료");
-
-        String input = scanner.nextLine().trim();
-        switch (input) {
-            case "1": state = GameState.PROLOGUE; break;
-            case "2": /* TODO: SaveManager.load() */ break;
-            case "3": /* TODO: CollectionManager.show() */ break;
-            case "4": state = GameState.GAME_OVER; break;
+        int choice = menuView.showMainMenu();
+        switch (choice) {
+            case 1: state = GameState.PROLOGUE; break;
+            case 2: /* TODO: SaveManager.load() */ break;
+            case 3: collectionManager.showCollectionMenu(); break;
+            case 4: state = GameState.GAME_OVER; break;
         }
     }
 
     // ============================================
     // 프롤로그
-    // 영균이 딸깍이에게 과제 시킴 → 모니터에 빨려들어감
     // ============================================
     private void playPrologue() {
         showDialogue("prologue", "story");
@@ -118,19 +120,15 @@ public class GameManager {
 
     // ============================================
     // 1층: 설산 (튜토리얼)
-    // 혜진, 선혁 합류 → Scanner 획득 → 혜진 VS 영균 연습전투
-    // → 혜진 소멸(힙 영역으로) → 눈사태 → 다음 층
     // ============================================
     private void playTutorial() {
         showDialogue("floor1", "story");
 
-        // Scanner 카드 획득
         // TODO: DAO에서 카드 로드 후 추가
         // playerCards.add(scannerCard);
 
-        // 혜진 VS 영균 (튜토리얼 전투)
-        // TODO: Hero, 혜진 Entity 생성
-        // BattleResult result = battleManager.startBattle(hero, hyejin, playerCards, playerItems, hyejinCard);
+        // TODO: Hero, 혜진 Entity 생성 후 전투 연결
+        // BattleResult result = battleManager.startBattle(hero, hyejin, "혜진", playerCards, playerItems, hyejinCard);
         // if (result == BattleResult.FLEE) {
         //     EventResult eventResult = eventManager.trigger(EventManager.TUTORIAL_FLEE);
         //     if (eventResult == EventResult.ENDING_FALL) {
@@ -140,10 +138,7 @@ public class GameManager {
         //     }
         // }
 
-        // 혜진 소멸 → random 카드 획득
         showDialogue("floor1", "hyejin_disappear");
-
-        // 눈사태 → 다음 층으로
         showDialogue("floor1", "avalanche");
 
         state = GameState.FLOOR_2;
@@ -151,48 +146,37 @@ public class GameManager {
 
     // ============================================
     // 2층: 숲 (미주)
-    // 나뭇가지 주석 이벤트, [ ; ] 카드 습득, 미주 보스전
     // ============================================
     private void playFloor2() {
         showDialogue("floor2", "story");
 
         // TODO: StageManager - 5x5 맵 탐색 루프
-        // 맵 탐색 중 이벤트 노드 도달 시:
 
-        // 나뭇가지 주석 이벤트
         EventResult commentResult = eventManager.trigger(EventManager.COMMENT_BRANCH);
         if (commentResult == EventResult.SHOW_DIALOGUE) {
             showDialogue("floor2", "comment_branch");
         }
 
-        // [ ; ] 카드 발견 (같은 구역 3번 방문 시)
-        // eventManager.setVisitCount(visitCount);
         EventResult semicolonResult = eventManager.trigger(EventManager.SEMICOLON_FIND);
         if (semicolonResult == EventResult.GET_CARD) {
             showDialogue("floor2", "semicolon_find");
             hasSemicolon = true;
         }
 
-        // 미주 보스전
         showDialogue("floor2", "battle_boss_start");
-        // TODO: BattleManager - 미주 전투
-        // BattleResult result = battleManager.startBattle(hero, miju, playerCards, playerItems, mijuCard);
+        // TODO: battleManager.startBattle(hero, miju, "미주", playerCards, playerItems, mijuCard);
         showDialogue("floor2", "battle_boss_win");
 
-        // 바닥 붕괴 → 다음 층
         showDialogue("floor2", "collapse");
-
         state = GameState.FLOOR_3;
     }
 
     // ============================================
     // 3층: 들판 (솔민)
-    // 세미콜론 문 → 최단거리 엔딩 분기, 솔민 보스전
     // ============================================
     private void playFloor3() {
         showDialogue("floor3", "story");
 
-        // 세미콜론 문 이벤트
         EventResult doorResult = eventManager.trigger(EventManager.SEMICOLON_DOOR);
         if (doorResult == EventResult.ENDING_SHORTCUT) {
             showDialogue("floor3", "semicolon_door_open");
@@ -202,59 +186,46 @@ public class GameManager {
             showDialogue("floor3", "semicolon_door_locked");
         }
 
-        // 인터프리터/JIT 로봇 목격
         EventResult robotResult = eventManager.trigger(EventManager.INTERPRETER_ROBOT);
         if (robotResult == EventResult.SHOW_DIALOGUE) {
             showDialogue("floor3", "interpreter_robot");
         }
 
-        // 솔민 보스전
         showDialogue("floor3", "battle_boss_start");
-        // TODO: BattleManager - 솔민 전투
+        // TODO: battleManager.startBattle(hero, solmin, "솔민", playerCards, playerItems, solminCard);
         showDialogue("floor3", "battle_boss_win");
 
-        // 구덩이 추락 → 다음 층
         showDialogue("floor3", "collapse");
-
         state = GameState.FLOOR_4;
     }
 
     // ============================================
     // 4층: 사막 (제석)
-    // 선혁 VS 영균 → 선혁 뒷통수 엔딩 분기, 제석 보스전
     // ============================================
     private void playFloor4() {
         showDialogue("floor4", "story");
 
-        // 선혁 의심 이벤트 → 선택지
         showDialogue("floor4", "suspect_sunhyuk");
-        System.out.println("1. 선혁을 공격한다");
-        System.out.println("2. 선혁을 믿는다");
-        String choice = scanner.nextLine().trim();
+        int choice = gameView.showChoice("선혁을 공격한다", "선혁을 믿는다");
 
-        if ("1".equals(choice)) {
-            // 선혁 VS 영균 전투
+        if (choice == 1) {
             EventResult suspectResult = eventManager.trigger(EventManager.SUSPECT_SUNHYUK);
-            // TODO: BattleManager - 선혁 VS 영균
-            // BattleResult result = battleManager.startBattle(hero, sunhyuk, playerCards, playerItems, sunhyukCard);
+            // TODO: BattleResult result = battleManager.startBattle(hero, sunhyuk, "선혁", ...);
             // if (result == BattleResult.LOSE) {
             //     showDialogue("floor4", "betrayal_lose");
             //     triggerEnding("BETRAYAL");
             //     return;
             // }
-            showDialogue("floor4", "betrayal_win");  // 승리 → 화해
+            showDialogue("floor4", "betrayal_win");
         } else {
             showDialogue("floor4", "trust_sunhyuk");
         }
 
-        // 제석 보스전
         showDialogue("floor4", "battle_boss_start");
-        // TODO: BattleManager - 제석 전투
+        // TODO: battleManager.startBattle(hero, jeseok, "제석", playerCards, playerItems, jeseokCard);
         showDialogue("floor4", "battle_boss_win");
 
-        // 모래지옥 → 다음 층
         showDialogue("floor4", "collapse");
-
         state = GameState.FLOOR_5;
     }
 
@@ -264,13 +235,11 @@ public class GameManager {
     private void playFloor5() {
         showDialogue("floor5", "story");
 
-        // 수지 보스전
         showDialogue("floor5", "battle_boss_start");
-        // TODO: BattleManager - 수지 전투
+        // TODO: battleManager.startBattle(hero, suji, "수지", playerCards, playerItems, sujiCard);
         showDialogue("floor5", "battle_boss_win");
 
         showDialogue("floor5", "collapse");
-
         state = GameState.FLOOR_6;
     }
 
@@ -280,20 +249,17 @@ public class GameManager {
     private void playFloor6() {
         showDialogue("floor6", "story");
 
-        // 캐시 전투 이벤트
         EventResult cacheResult = eventManager.trigger(EventManager.CACHE_BATTLE);
         if (cacheResult == EventResult.START_BATTLE) {
             showDialogue("floor6", "cache_battle");
-            // TODO: BattleManager - 캐시 전투
+            // TODO: 캐시 전투
         }
 
-        // 봉민 보스전
         showDialogue("floor6", "battle_boss_start");
-        // TODO: BattleManager - 봉민 전투
+        // TODO: battleManager.startBattle(hero, bongmin, "봉민", playerCards, playerItems, bongminCard);
         showDialogue("floor6", "battle_boss_win");
 
         showDialogue("floor6", "collapse");
-
         state = GameState.FLOOR_7;
     }
 
@@ -303,12 +269,10 @@ public class GameManager {
     private void playFloor7() {
         showDialogue("floor7", "story");
 
-        // 민중 보스전
         showDialogue("floor7", "battle_boss_start");
-        // TODO: BattleManager - 민중 전투
+        // TODO: battleManager.startBattle(hero, minjung, "민중", playerCards, playerItems, minjungCard);
         showDialogue("floor7", "battle_boss_win");
 
-        // 힙 영역 진입 분기
         EventResult heapResult = eventManager.trigger(EventManager.HEAP_ENTRY);
         // TODO: 진입 조건 구체화
         // 조건 충족 시:
@@ -317,7 +281,6 @@ public class GameManager {
         //   return;
 
         showDialogue("floor7", "collapse");
-
         state = GameState.FINAL_FLOOR;
     }
 
@@ -327,16 +290,12 @@ public class GameManager {
     private void playHiddenMap() {
         showDialogue("hidden", "story");
 
-        // 혜진 재회
         eventManager.trigger(EventManager.HYEJIN_REUNION);
         showDialogue("hidden", "hyejin_reunion");
 
-        // 루트 선택
-        System.out.println("1. 혜진 루트");
-        System.out.println("2. 보경 루트");
-        String choice = scanner.nextLine().trim();
+        int choice = gameView.showChoice("혜진 루트", "보경 루트");
 
-        if ("1".equals(choice)) {
+        if (choice == 1) {
             hyejinRoute = true;
             showDialogue("hidden", "hyejin_route");
             triggerEnding("GC");
@@ -344,7 +303,6 @@ public class GameManager {
         }
 
         showDialogue("hidden", "bokyung_route");
-
         state = GameState.FINAL_FLOOR;
     }
 
@@ -354,7 +312,6 @@ public class GameManager {
     private void playFinalFloor() {
         showDialogue("floor8", "story");
 
-        // } 카드 체크
         EventResult bracketResult = eventManager.trigger(EventManager.FINAL_BRACKET);
         if (bracketResult == EventResult.ENDING_DEFEAT) {
             showDialogue("floor8", "no_bracket");
@@ -362,13 +319,10 @@ public class GameManager {
             return;
         }
 
-        // } 카드 사용 → 최종 선택지
         showDialogue("floor8", "use_bracket");
-        System.out.println("1. 혜진 엔딩");
-        System.out.println("2. 혜진 X 엔딩");
-        String choice = scanner.nextLine().trim();
+        int choice = gameView.showChoice("혜진 엔딩", "혜진 X 엔딩");
 
-        if ("1".equals(choice)) {
+        if (choice == 1) {
             triggerEnding("HYEJIN");
         } else {
             triggerEnding("NO_HYEJIN");
@@ -384,7 +338,21 @@ public class GameManager {
     }
 
     private void playEnding() {
-        // 엔딩별 대사 출력
+        // 엔딩 타이틀 표시
+        String endingName;
+        switch (endingType) {
+            case "FALL":       endingName = "넘어짐";     break;
+            case "SHORTCUT":   endingName = "최단거리";   break;
+            case "BETRAYAL":   endingName = "뒷통수";     break;
+            case "GC":         endingName = "GC";         break;
+            case "DEFEAT":     endingName = "패배";       break;
+            case "HYEJIN":     endingName = "혜진";       break;
+            case "NO_HYEJIN":  endingName = "혜진 X";     break;
+            default:           endingName = endingType;   break;
+        }
+        gameView.showEndingTitle(endingName);
+
+        // 엔딩 대사 출력
         switch (endingType) {
             case "FALL":       showDialogue("ending", "fall");       break;
             case "SHORTCUT":   showDialogue("ending", "shortcut");   break;
@@ -395,7 +363,7 @@ public class GameManager {
             case "NO_HYEJIN":  showDialogue("ending", "no_hyejin");  break;
         }
 
-        // TODO: Collection - 엔딩 해금 처리
+        // TODO: collectionManager.unlockEnding(endingId, currentTry);
         state = GameState.GAME_OVER;
     }
 
@@ -404,11 +372,7 @@ public class GameManager {
     // ============================================
     private void showDialogue(String prefix, String tag) {
         List<String> lines = storyManager.get(prefix, tag);
-        for (String line : lines) {
-            // TODO: View - 타이핑 효과로 출력
-            System.out.println(line);
-        }
-        // TODO: View - 입력 대기 (Enter로 다음 진행)
+        gameView.showDialogue(lines);
     }
 
     // ============================================
