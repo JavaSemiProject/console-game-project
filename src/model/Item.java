@@ -147,6 +147,7 @@ public class Item {
     public void setIImg(String iImg) { this.iImg = iImg; }
     public void setTryNum(int tryNum) { this.tryNum = tryNum; }
     public void setPp(int pp) { this.pp = pp; }
+    public void setEffect(ItemEffect effect) { this.effect = effect; }
 
     @Override
     public String toString() {
