@@ -32,7 +32,7 @@ public List<Item> findAllByTry(int tryNum) {
   String sql = """
       SELECT i.* FROM item i
       JOIN i_save isv ON i.i_id = isv.i_id
-      WHERE isv.'try' = ?
+      WHERE isv.`try`= ?
       """;
   try (Connection conn = DBConnection.getConnection();
        PreparedStatement pstmt = conn.prepareStatement(sql)) {
