@@ -55,6 +55,7 @@ public class StageManager {
 */
 
 
+
   // Floor 구성(8→7→..→1)
   public void buildFloorChain(int topLevel) {
     currentFloor = Floor.buildChain(topLevel);

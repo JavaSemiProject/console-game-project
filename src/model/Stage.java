@@ -15,6 +15,7 @@ public Stage(int stageId, String stageName, int row, String column, int fLevel){
   this.fLevel = fLevel;
 }
 
+
 public int getStageId() {return stageId;}
 public String getStageName(){return stageName;}
 public void setStageName(String StageName){this.stageName = StageName;}

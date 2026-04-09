@@ -27,7 +27,6 @@ public static Floor buildChain(int topLevel){
 }
 
 
-
 public boolean isLastFloor() {return nextFloor == null;}
 public int getFloorLevel() {return floorLevel;}
 public List<Stage> getStages() {return stages;}
