@@ -154,4 +154,21 @@ public class Card {
     public int use(Entity user, Entity target) {
         return effect.execute(user, target);
     }
+    public static Card createAttackCard(String cId, int pp, String cName, String method,
+                                        int power, String desc, String cUseMsg, String cImg, int tryNum) {
+        Card card = new Card.Builder()
+            .cId(cId)
+            .pp(pp)
+            .cName(cName)
+            .method(method)
+            .cPower(power)
+            .cDesc(desc)
+            .cUseMsg(cUseMsg)
+            .cImg(cImg)
+            .tryNum(tryNum)
+            .build();
+        card.setEffect(new AttackEffect(power, card)); // 같은 패키지라 접근 가능
+        return card;
+    }
+
 }
