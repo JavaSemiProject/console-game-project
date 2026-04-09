@@ -31,7 +31,7 @@ public class GameView {
 
     /** Enter 입력 대기. 's' 입력 시 true 반환 (스킵 요청) */
     public boolean waitForEnter() {
-        System.out.println("\n[Enter: 계속 / s: 스킵]");
+        System.out.println("\n[ Enter: 계속 ]");
         String input = scanner.nextLine().trim().toLowerCase();
         return input.equals("s");
     }
@@ -136,6 +136,19 @@ public class GameView {
     // 전투 화면
     // ============================================
 
+    /** 커서 위치 저장 후 아래 영역만 클리어 */
+    private void saveCursor() {
+        System.out.print("\033[s");  // 커서 위치 저장
+        System.out.flush();
+    }
+
+    /** 저장된 커서로 복귀 후 아래 전부 지움 */
+    private void clearBelow() {
+        System.out.print("\033[u");  // 커서 복원
+        System.out.print("\033[J");  // 커서 아래 전부 클리어
+        System.out.flush();
+    }
+
     /** 전투 시작 연출 */
     public void showBattleStart(String enemyName) {
         clearScreen();
@@ -145,13 +158,15 @@ public class GameView {
         System.out.println();
     }
 
-    /** 전투 상태 표시 (HP 바) */
+    /** 전투 상태 표시 (HP 바) + 커서 저장 */
     public void showBattleStatus(Entity player, Entity enemy, String enemyName) {
-        System.out.println();
+        clearScreen();
         System.out.println("[나] " + buildHpBar(player) + "  "
                 + player.getCurrentHealth() + "/" + player.getHealth());
         System.out.println("[" + enemyName + "] " + buildHpBar(enemy) + "  "
                 + enemy.getCurrentHealth() + "/" + enemy.getHealth());
+        System.out.println();
+        saveCursor();  // 이 아래가 교체 가능 영역
     }
 
     /** HP 비율에 따른 바 생성 */
@@ -171,7 +186,8 @@ public class GameView {
 
     /** 플레이어 행동 선택 메뉴 */
     public int showPlayerMenu(int cardCount, int itemCount) {
-        System.out.println("\n행동을 선택하세요:");
+        clearBelow();
+        System.out.println("행동을 선택하세요:");
         System.out.println("1. 카드 사용 (" + cardCount + "장)");
         System.out.println("2. 아이템 사용 (" + itemCount + "개)");
         System.out.println("3. 도망가기");
@@ -191,12 +207,13 @@ public class GameView {
 
     /** 카드 목록 출력 및 선택 (0: 취소) */
     public int showCardList(List<Card> cards) {
+        clearBelow();
         if (cards.isEmpty()) {
             System.out.println("보유한 카드가 없습니다!");
             return -1;
         }
 
-        System.out.println("\n사용할 카드를 선택하세요 (0: 취소):");
+        System.out.println("사용할 카드를 선택하세요 (0: 취소):");
         for (int i = 0; i < cards.size(); i++) {
             Card c = cards.get(i);
             System.out.println((i + 1) + ". " + c.getCName() + " (ATK:" + c.getCPower() + ")");
@@ -216,12 +233,13 @@ public class GameView {
 
     /** 아이템 목록 출력 및 선택 (0: 취소) */
     public int showItemList(List<Item> items) {
+        clearBelow();
         if (items.isEmpty()) {
             System.out.println("보유한 아이템이 없습니다!");
             return -1;
         }
 
-        System.out.println("\n사용할 아이템을 선택하세요 (0: 취소):");
+        System.out.println("사용할 아이템을 선택하세요 (0: 취소):");
         for (int i = 0; i < items.size(); i++) {
             Item it = items.get(i);
             System.out.println((i + 1) + ". " + it.getIName());
@@ -241,17 +259,21 @@ public class GameView {
 
     /** 공격 결과 출력 */
     public void showAttackResult(String attackerName, String cardName, int damage) {
+        clearBelow();
         printSlow(attackerName + "의 " + cardName + "! " + damage + " 데미지!");
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 아이템 사용 결과 출력 */
     public void showItemUseResult(String itemName) {
+        clearBelow();
         printSlow(itemName + "을(를) 사용했다!");
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 전투 승리 */
     public void showBattleWin(String enemyName) {
-        System.out.println();
+        clearBelow();
         printSlow("=================================");
         printSlow("  " + enemyName + "을(를) 쓰러뜨렸다!");
         printSlow("=================================");
@@ -260,7 +282,7 @@ public class GameView {
 
     /** 전투 패배 */
     public void showBattleLose() {
-        System.out.println();
+        clearBelow();
         printSlow("=================================");
         printSlow("  쓰러지고 말았다...");
         printSlow("=================================");
@@ -269,6 +291,7 @@ public class GameView {
 
     /** 도망 */
     public void showFlee() {
+        clearBelow();
         printSlow("도망쳤다!");
     }
 

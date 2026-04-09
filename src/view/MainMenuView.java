@@ -22,7 +22,7 @@ public class MainMenuView {
         System.out.println();
         System.out.println("  ╔═══════════════════════════════════╗");
         System.out.println("  ║                                   ║");
-        System.out.println("  ║   코드 세계에 갇힌 영균의 탈출기       ║");
+        System.out.println("  ║   코드 세계에 갇힌 영균의 탈출기  ║");
         System.out.println("  ║                                   ║");
         System.out.println("  ╚═══════════════════════════════════╝");
         System.out.println();
