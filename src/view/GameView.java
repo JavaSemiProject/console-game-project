@@ -45,8 +45,11 @@ public class GameView {
         } catch (IOException ignored) {}
     }
 
-    /** 텍스트를 한 글자씩 출력. 도중 키 입력 시 나머지를 즉시 출력. */
-    public void printSlow(String text, int delayMs) {
+    /**
+     * 텍스트를 한 글자씩 출력. 도중 키 입력 시 나머지를 즉시 출력.
+     * @return 's' 입력으로 전체 스킵이 요청되면 true
+     */
+    public boolean printSlow(String text, int delayMs) {
         flushInput();
         char[] chars = text.toCharArray();
         for (int i = 0; i < chars.length; i++) {
@@ -54,19 +57,47 @@ public class GameView {
             try {
                 Thread.sleep(delayMs);
                 if (System.in.available() > 0) {
-                    // 나머지 한번에 출력
                     System.out.print(text.substring(i + 1));
-                    flushInput();
-                    break;
+                    boolean skip = checkSkipInput();
+                    System.out.println();
+                    return skip;
                 }
             } catch (IOException | InterruptedException ignored) {}
         }
         System.out.println();
+        return false;
     }
 
     /** 텍스트를 한 글자씩 출력 (기본 30ms) */
-    public void printSlow(String text) {
-        printSlow(text, 30);
+    public boolean printSlow(String text) {
+        return printSlow(text, 30);
+    }
+
+    /** 입력 버퍼를 읽어서 's' 포함 여부 반환 */
+    private boolean checkSkipInput() {
+        try {
+            if (System.in.available() > 0) {
+                byte[] buf = new byte[System.in.available()];
+                System.in.read(buf);
+                return new String(buf).trim().toLowerCase().contains("s");
+            }
+        } catch (IOException ignored) {}
+        return false;
+    }
+
+    /** 지정 시간(ms) 대기. 도중 's' 입력 시 true 반환 (스킵) */
+    private boolean sleepWithSkipCheck(int ms) {
+        try {
+            int elapsed = 0;
+            while (elapsed < ms) {
+                Thread.sleep(50);
+                elapsed += 50;
+                if (System.in.available() > 0) {
+                    return checkSkipInput();
+                }
+            }
+        } catch (IOException | InterruptedException ignored) {}
+        return false;
     }
 
     // ============================================
@@ -74,12 +105,14 @@ public class GameView {
     // ============================================
 
     /**
-     * 대사 목록을 타이핑 효과로 출력.
-     * - 타이핑 도중 Enter → 현재 줄 즉시 완성
-     * - 대기 중 's' 입력 → 남은 대사 전부 즉시 출력
+     * 대사 목록을 연속 출력.
+     * - 한 줄씩 타이핑 효과 후 0.5초 대기
+     * - 타이핑 도중 또는 줄 대기 중 's' + Enter → 나머지 즉시 출력
+     * - 모든 출력 후 Enter 대기
      */
     public void showDialogue(List<String> lines) {
         clearScreen();
+        flushInput();
         boolean skip = false;
 
         for (int i = 0; i < lines.size(); i++) {
@@ -92,20 +125,18 @@ public class GameView {
 
             if (line.isEmpty()) {
                 System.out.println();
-                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                skip = sleepWithSkipCheck(300);
             } else {
-                printSlow(line);
+                skip = printSlow(line);
             }
 
-            // 5줄마다 입력 대기 (스킵 기회 제공)
-            if ((i + 1) % 5 == 0 && i < lines.size() - 1) {
-                skip = waitForEnter();
+            // 줄 사이 0.5초 대기 (스킵 체크)
+            if (!skip && i < lines.size() - 1) {
+                skip = sleepWithSkipCheck(500);
             }
         }
 
-        if (!skip) {
-            waitForEnter();
-        }
+        waitForEnter();
     }
 
     // ============================================

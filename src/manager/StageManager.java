@@ -2,6 +2,7 @@ package manager;
 
 import model.Floor;
 import model.Stage;
+import view.GameView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,12 +100,69 @@ public class StageManager {
   }
 
   // 특정 위치 스테이지 조회 (row, column 기반)
-  public Stage getStageAt(int row, String column,Floor floor) {
-    if (currentFloor == null) return null;
-    return currentFloor.getStages().stream()
+  public Stage getStageAt(int row, String column, Floor floor) {
+    if (floor == null) return null;
+    return floor.getStages().stream()
         .filter(s -> s.getRow() == row && s.getColumn().equals(column))
         .findFirst()
         .orElse(null);
+  }
+
+  // ============================================
+  // 맵 탐색 루프 (도착점 a_5 도달 시 종료)
+  // startPos가 null이면 e_1에서 시작
+  // 반환값: 출구 도달 직전 위치 (도망 복귀용)
+  // ============================================
+  public Stage exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+    Floor floor = findFloor(floorLevel);
+    if (floor == null) return null;
+
+    Stage currentPos = (startPos != null) ? startPos : getStageAt(1, "e", floor);
+    if (currentPos == null) return null;
+
+    Stage prevPos = currentPos;
+
+    while (true) {
+      gameView.showMap(floor, currentPos);
+      String input = gameView.getMovementInput();
+
+      int nextRow = currentPos.getRow();
+      char nextCol = currentPos.getColumn().charAt(0);
+
+      switch (input) {
+        case "w": nextCol--; break;
+        case "s": nextCol++; break;
+        case "a": nextRow--; break;
+        case "d": nextRow++; break;
+        default: continue;
+      }
+
+      if (nextCol >= 'a' && nextCol <= 'e' && nextRow >= 1 && nextRow <= 5) {
+        Stage next = getStageAt(nextRow, String.valueOf(nextCol), floor);
+        if (next != null) {
+          prevPos = currentPos;
+          currentPos = next;
+        }
+      } else {
+        gameView.showMapAlert("더 이상 갈 수 없습니다.");
+      }
+
+      // 도착점 도달
+      if (currentPos.getColumn().equals("a") && currentPos.getRow() == 5) {
+        gameView.showMessage("\n>> 출구를 발견했다!");
+        gameView.waitForEnter();
+        return prevPos;
+      }
+    }
+  }
+
+  /** 기본 시작 위치(e_1)로 탐색 */
+  public Stage exploreFloor(int floorLevel, GameView gameView) {
+    return exploreFloor(floorLevel, gameView, null);
+  }
+
+  public Floor getFloor(int level) {
+    return findFloor(level);
   }
 /*
   // 스테이지 추가

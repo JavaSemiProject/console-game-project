@@ -63,10 +63,8 @@ public class StoryManager {
         loadFile(basePath + "/floor5.txt",     "floor5");
         loadFile(basePath + "/floor6.txt",     "floor6");
         loadFile(basePath + "/floor7.txt",     "floor7");
-        loadFile(basePath + "/hidden.txt",     "hidden");
+        loadFile(basePath + "/heap.txt",       "heap");
         loadFile(basePath + "/floor8.txt",     "floor8");
-        loadFile(basePath + "/ending.txt",     "ending");
-        loadFile(basePath + "/battle.txt",     "battle");
         loadFile(basePath + "/system.txt",     "system");
     }
 
