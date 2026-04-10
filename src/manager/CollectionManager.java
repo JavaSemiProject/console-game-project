@@ -5,6 +5,7 @@ import model.Item;
 import model.Ending;
 import model.NPC;
 import model.Collection;
+import view.GameView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,14 +14,18 @@ import java.util.Map;
 
 public class CollectionManager {
 
-    // 해금 상태 목록
     private List<Collection> collections = new ArrayList<>();
 
-    // 실제 객체 맵 (contentId → 객체)
     private Map<Integer, Card> cardMap = new HashMap<>();
     private Map<Integer, Ending> endingMap = new HashMap<>();
     private Map<Integer, Item> itemMap = new HashMap<>();
     private Map<Integer, NPC> bossMap = new HashMap<>();
+
+    private GameView gameView;
+
+    public CollectionManager(GameView gameView) {
+        this.gameView = gameView;
+    }
 
     // ============================================
     // 데이터 등록 (DAO 로드 후 호출)
@@ -84,97 +89,73 @@ public class CollectionManager {
     }
 
     // ============================================
-    // 도감 출력: 카드
+    // 도감 출력
     // ============================================
     public void printCardCollection() {
-        // TODO: View로 출력 위임
-        System.out.println("=== 카드 도감 ===");
+        gameView.showCollectionHeader("카드 도감");
         for (Collection c : collections) {
             if (!"CARD".equals(c.getCollectionType())) continue;
             Card card = cardMap.get(c.getContentId());
             if (card == null) continue;
 
-            if (c.isUnlocked()) {
-                System.out.println("[" + card.getCName() + "] ATK:" + card.getCPower() +
-                        " - " + card.getCDesc() +
-                        " (해금: " + c.getFirstTry() + "트라이)");
-            } else {
-                System.out.println("[???] 미해금");
-            }
+            String detail = "ATK:" + card.getCPower() + " - " + card.getCDesc()
+                    + " (해금: " + c.getFirstTry() + "트라이)";
+            gameView.showCollectionEntry(card.getCName(), detail, c.isUnlocked());
         }
     }
 
-    // ============================================
-    // 도감 출력: 엔딩
-    // ============================================
     public void printEndingCollection() {
-        // TODO: View로 출력 위임
-        System.out.println("=== 엔딩 도감 ===");
+        gameView.showCollectionHeader("엔딩 도감");
         for (Collection c : collections) {
             if (!"ENDING".equals(c.getCollectionType())) continue;
             Ending ending = endingMap.get(c.getContentId());
             if (ending == null) continue;
 
-            if (c.isUnlocked()) {
-                System.out.println("[" + ending.getEName() + "] " + ending.getEDesc() +
-                        " (해금: " + c.getFirstTry() + "트라이)");
-            } else {
-                System.out.println("[???] 미해금");
-            }
+            String detail = ending.getEDesc() + " (해금: " + c.getFirstTry() + "트라이)";
+            gameView.showCollectionEntry(ending.getEName(), detail, c.isUnlocked());
         }
     }
 
-    // ============================================
-    // 도감 출력: 아이템
-    // ============================================
     public void printItemCollection() {
-        // TODO: View로 출력 위임
-        System.out.println("=== 아이템 도감 ===");
+        gameView.showCollectionHeader("아이템 도감");
         for (Collection c : collections) {
             if (!"ITEM".equals(c.getCollectionType())) continue;
             Item item = itemMap.get(c.getContentId());
             if (item == null) continue;
 
-            if (c.isUnlocked()) {
-                System.out.println("[" + item.getIName() + "] " + item.getIDesc() +
-                        " (해금: " + c.getFirstTry() + "트라이)");
-            } else {
-                System.out.println("[???] 미해금");
-            }
+            String detail = item.getIDesc() + " (해금: " + c.getFirstTry() + "트라이)";
+            gameView.showCollectionEntry(item.getIName(), detail, c.isUnlocked());
         }
     }
 
-    // ============================================
-    // 도감 출력: 보스 (공략 여부)
-    // ============================================
     public void printBossCollection() {
-        // TODO: View로 출력 위임
-        System.out.println("=== 보스 도감 ===");
+        gameView.showCollectionHeader("보스 도감");
         for (Collection c : collections) {
             if (!"BOSS".equals(c.getCollectionType())) continue;
             NPC boss = bossMap.get(c.getContentId());
             if (boss == null) continue;
 
-            if (c.isUnlocked()) {
-                System.out.println("[" + boss.getNName() + "] " + boss.getNDesc() +
-                        " (공략: " + c.getFirstTry() + "트라이)");
-            } else {
-                System.out.println("[???] 미공략");
-            }
+            String detail = boss.getNDesc() + " (공략: " + c.getFirstTry() + "트라이)";
+            gameView.showCollectionEntry(boss.getNName(), detail, c.isUnlocked());
         }
     }
 
     // ============================================
-    // 전체 도감 출력
+    // 도감 메뉴 (View 연동)
     // ============================================
-    public void printAll() {
-        printCardCollection();
-        System.out.println();
-        printItemCollection();
-        System.out.println();
-        printBossCollection();
-        System.out.println();
-        printEndingCollection();
+    public void showCollectionMenu() {
+        while (true) {
+            int menu = gameView.showCollectionMenu();
+            switch (menu) {
+                case 1: gameView.clearScreen(); printCardCollection(); break;
+                case 2: gameView.clearScreen(); printItemCollection(); break;
+                case 3: gameView.clearScreen(); printBossCollection(); break;
+                case 4: gameView.clearScreen(); printEndingCollection(); break;
+                case 5: return;
+            }
+            gameView.showProgress(getUnlockedCount(), getTotalCount());
+            gameView.waitForEnter();
+        }
     }
 
     // ============================================
@@ -190,9 +171,5 @@ public class CollectionManager {
 
     public int getTotalCount() {
         return collections.size();
-    }
-
-    public String getProgressText() {
-        return getUnlockedCount() + " / " + getTotalCount();
     }
 }
