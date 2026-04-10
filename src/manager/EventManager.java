@@ -40,11 +40,21 @@ public class EventManager {
     // ============================================
     private boolean hasSemicolon;
     private boolean hasBracket;
-    private int visitCount;          // 특정 구역 방문 횟수 (세미콜론 이벤트용)
+    private boolean commentBranchDone;     // 2층: 주석 나뭇가지 이벤트 완료
+    private boolean interpreterRobotDone;  // 3층: 실행엔진 이벤트 완료
+    private int visitCount;                // 특정 구역 방문 횟수 (세미콜론 이벤트용)
 
     public void updateState(boolean hasSemicolon, boolean hasBracket) {
         this.hasSemicolon = hasSemicolon;
         this.hasBracket = hasBracket;
+    }
+
+    public void setCommentBranchDone(boolean done) {
+        this.commentBranchDone = done;
+    }
+
+    public void setInterpreterRobotDone(boolean done) {
+        this.interpreterRobotDone = done;
     }
 
     public void setVisitCount(int count) {
@@ -83,7 +93,10 @@ public class EventManager {
 
             // --- 4층: 사막 ---
             case SUSPECT_SUNHYUK:
-                return EventResult.START_BATTLE;    // 선혁 전투 분기 진입
+                if (commentBranchDone && interpreterRobotDone) {
+                    return EventResult.START_BATTLE;    // 두 이벤트 모두 경험 → 선혁 의심 활성화
+                }
+                return EventResult.NOTHING;
 
             // --- 6층: 심해 ---
             case CACHE_BATTLE:
