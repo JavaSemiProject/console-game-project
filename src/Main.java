@@ -5,7 +5,8 @@ import manager.GameManager;
 import java.io.PrintStream;
 import java.util.Scanner;
 
-public class Main {
+public class
+Main {
 
     public static void main(String[] args) {
         // Windows 콘솔 UTF-8 설정

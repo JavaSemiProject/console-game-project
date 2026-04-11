@@ -1,11 +1,10 @@
 package manager;
 
+import dao.SaveDAO;
+import dao.StageDAO;
 import manager.BattleManager.BattleResult;
 import manager.EventManager.EventResult;
-import model.Card;
-import model.Hero;
-import model.Item;
-import model.NPC;
+import model.*;
 import view.GameView;
 import view.MainMenuView;
 
@@ -51,7 +50,7 @@ public class GameManager {
     private StoryManager storyManager;
     private CollectionManager collectionManager;
     private StageManager stageManager;
-
+    private SaveManager saveManager;
     // 뷰
     private GameView gameView;
     private MainMenuView menuView;
@@ -66,14 +65,19 @@ public class GameManager {
         this.storyManager = new StoryManager();
         this.collectionManager = new CollectionManager(gameView);
         this.stageManager = new StageManager();
-
+        this.saveManager = new SaveManager(stageManager, new StageDAO(), new SaveDAO());
         this.state = GameState.MAIN_MENU;
+
     }
 
     // ============================================
     // 게임 데이터 초기화 (하드코딩)
     // ============================================
     private void initGameData() {
+        initGameData(true);  // 새 게임은 세이브 생성
+    }
+
+    private void initGameData(boolean createSave) {
         hero = new Hero("H001", 100, 5, 10, 0, "C001");
 
         playerCards.clear();
@@ -88,9 +92,18 @@ public class GameManager {
         hasSemicolon = false;
         hasBracket = false;
         hyejinRoute = false;
-
-        stageManager.generateStages();
         stageManager.buildFloorChain(8);
+
+        if (createSave) {   // ← 이어하기 시엔 실행 안 됨
+            Save newSave = saveManager.createNewSave(2);
+            if (newSave != null) {
+                stageManager.setCurrentTryNum(newSave.getTryNum());
+                System.out.println("[GameManager] tryNum 설정: " + newSave.getTryNum());
+                System.out.println("[GameManager] 새 게임 세이브 생성: " + newSave.getSaveStatus());
+            } else {
+                System.out.println("[GameManager] 세이브 생성 실패 - tryNum 미설정");
+            }
+        }
     }
 
     // ============================================
@@ -146,7 +159,8 @@ public class GameManager {
             // FLEE → 직전 위치로 복귀 후 다시 출구 찾기
             gameView.showMessage("도망쳤다... 다시 출구를 찾아야 한다.");
             gameView.waitForEnter();
-            lastPos = stageManager.exploreFloor(floorLevel, gameView, lastPos);
+            StageManager.FloorResult floorResult = stageManager.exploreFloor(7, gameView, lastPos);
+            if (floorResult != null) lastPos = floorResult.prevPos;
         }
     }
 
@@ -187,9 +201,44 @@ public class GameManager {
                 initGameData();
                 state = GameState.PROLOGUE;
                 break;
-            case 2: /* TODO: SaveManager.load() */ break;
+            case 2:
+                /* TODO: SaveManager.load() */
+                // 이어하기: loadLatestSave()를 먼저 호출한 뒤 initGameData(false)로 세이브 생성 억제
+                Save loaded = saveManager.loadLatestSave();
+                if (loaded != null) {
+                    initGameData(false);  // 세이브 생성 없이 초기화만
+                    stageManager.setCurrentTryNum(loaded.getTryNum());
+                    GameState savedState = getStateFromSaveId(loaded.getLId());
+                    gameView.showMessage("[이어하기] " + loaded.getSaveStatus());
+                    gameView.waitForEnter();
+                    state = savedState;
+                } else {
+                    menuView.showNoSaveData();
+                }
+                break;
             case 3: collectionManager.showCollectionMenu(); break;
             case 4: state = GameState.GAME_OVER; break;
+        }
+    }
+
+    // s_id로 해당 층 GameState 반환
+    private GameState getStateFromSaveId(String sId) {
+        if (sId == null) return GameState.PROLOGUE;
+
+        // s_id 앞자리 숫자가 층 번호 (예: "2_a1" → 2층)
+        try {
+            int floorLevel = Integer.parseInt(sId.split("_")[0]);
+            switch (floorLevel) {
+                case 2: return GameState.FLOOR_2;
+                case 3: return GameState.FLOOR_3;
+                case 4: return GameState.FLOOR_4;
+                case 5: return GameState.FLOOR_5;
+                case 6: return GameState.FLOOR_6;
+                case 7: return GameState.FLOOR_7;
+                default: return GameState.PROLOGUE;
+            }
+        } catch (Exception e) {
+            return GameState.PROLOGUE;
         }
     }
 
@@ -241,13 +290,13 @@ public class GameManager {
     private void playFloor2() {
         showDialogue("floor2", "story");
 
-        model.Stage lastPos = stageManager.exploreFloor(2, gameView);
+        StageManager.FloorResult result = stageManager.exploreFloor(2, gameView);
 
         // TODO: 맵 셀 이벤트로 이동 (comment_branch, semicolon_find)
 
         // 미주 보스전
         if (!bossBattleLoop(2, "floor2", "battle_boss_start", "battle_boss_win",
-                "B002", "미주", 70, 8, 12, 15, lastPos)) return;
+                "B002", "미주", 70, 8, 12, 15, result.prevPos)) return;
 
         awardCard("C004", 0, "Arrays.sort", "SORT_SLASH", 30,
                 "배열을 정렬하며 적을 베어낸다.");
@@ -272,13 +321,12 @@ public class GameManager {
             showDialogue("floor3", "semicolon_door_locked");
         }
 
-        model.Stage lastPos = stageManager.exploreFloor(3, gameView);
-
+        StageManager.FloorResult result = stageManager.exploreFloor(3, gameView);
         // TODO: 맵 셀 이벤트로 이동 (interpreter_robot)
 
         // 솔민 보스전
         if (!bossBattleLoop(3, "floor3", "battle_boss_start", "battle_boss_win",
-                "B003", "솔민", 85, 10, 14, 18, lastPos)) return;
+                "B003", "솔민", 85, 10, 14, 18, result.prevPos)) return;
 
         awardCard("C005", 0, "String.split", "SPLIT_CUT", 20,
                 "문자열을 분할하며 적을 가른다.");
@@ -293,7 +341,7 @@ public class GameManager {
     private void playFloor4() {
         showDialogue("floor4", "story");
 
-        model.Stage lastPos = stageManager.exploreFloor(4, gameView);
+        StageManager.FloorResult result = stageManager.exploreFloor(4, gameView);
 
         // 선혁 의심 이벤트 (주석 + 실행엔진 이벤트를 모두 경험한 경우에만 활성화)
         EventResult suspectResult = eventManager.trigger(EventManager.SUSPECT_SUNHYUK);
@@ -316,7 +364,7 @@ public class GameManager {
 
         // 제석 보스전
         if (!bossBattleLoop(4, "floor4", "battle_boss_start", "battle_boss_win",
-                "B004", "제석", 100, 12, 16, 20, lastPos)) return;
+                "B004", "제석", 100, 12, 16, 20, result.prevPos)) return;
 
         awardCard("C006", 1, "try-catch", "CATCH_HEAL", 35,
                 "예외를 잡아 안정을 되찾는다.");
@@ -331,11 +379,11 @@ public class GameManager {
     private void playFloor5() {
         showDialogue("floor5", "story");
 
-        model.Stage lastPos = stageManager.exploreFloor(5, gameView);
+        StageManager.FloorResult result = stageManager.exploreFloor(5, gameView);
 
         // 수지 보스전
         if (!bossBattleLoop(5, "floor5", "battle_boss_start", "battle_boss_win",
-                "B005", "수지", 110, 14, 18, 22, lastPos)) return;
+                "B005", "수지", 110, 14, 18, 22, result.prevPos)) return;
 
         awardCard("C009", 1, "StringBuilder", "BUILD_STRIKE", 35,
                 "문자열을 조합해 강력한 일격을 날린다.");
@@ -350,13 +398,13 @@ public class GameManager {
     private void playFloor6() {
         showDialogue("floor6", "story");
 
-        model.Stage lastPos = stageManager.exploreFloor(6, gameView);
+        StageManager.FloorResult result = stageManager.exploreFloor(6, gameView);
 
         // TODO: 맵 셀 이벤트로 이동 (cache_battle)
 
         // 봉민 보스전
         if (!bossBattleLoop(6, "floor6", "battle_boss_start", "battle_boss_win",
-                "B006", "봉민", 130, 16, 20, 25, lastPos)) return;
+                "B006", "봉민", 130, 16, 20, 25, result.prevPos)) return;
 
         awardCard("C007", 0, "Collections", "COLLECTION_POWER", 40,
                 "컬렉션 프레임워크의 강력한 힘.");
@@ -371,7 +419,7 @@ public class GameManager {
     private void playFloor7() {
         showDialogue("floor7", "story");
 
-        model.Stage lastPos = stageManager.exploreFloor(7, gameView);
+        StageManager.FloorResult result = stageManager.exploreFloor(7, gameView);
 
         // 힙 영역 진입 체크
         EventResult heapResult = eventManager.trigger(EventManager.HEAP_ENTRY);
@@ -382,7 +430,7 @@ public class GameManager {
         }
 
         // 힙 미진입 시 바로 보스전
-        if (fightFloor7Boss(lastPos)) {
+        if (fightFloor7Boss(result.prevPos)) {
             state = GameState.FINAL_FLOOR;
         }
     }
@@ -413,7 +461,8 @@ public class GameManager {
             // FLEE → 직전 위치로 복귀 후 재도전
             gameView.showMessage("도망쳤다... 다시 출구를 찾아야 한다.");
             gameView.waitForEnter();
-            lastPos = stageManager.exploreFloor(7, gameView, lastPos);
+            StageManager.FloorResult floorResult = stageManager.exploreFloor(7, gameView, lastPos);
+            if (floorResult != null) lastPos = floorResult.prevPos;
         }
     }
 
