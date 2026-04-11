@@ -8,6 +8,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StageManager {
+
+  /** 맵 탐색 결과 */
+  public static class ExploreResult {
+    public enum Type { EXIT, EVENT }
+
+    private final Type type;
+    private final String eventId;   // EVENT일 때만 유효
+    private final Stage lastPos;    // 출구/이벤트 직전 위치 (도망 복귀용)
+    private final Stage currentPos; // 이벤트 발생 위치 (탐색 재개용)
+
+    public ExploreResult(Type type, String eventId, Stage lastPos, Stage currentPos) {
+      this.type = type;
+      this.eventId = eventId;
+      this.lastPos = lastPos;
+      this.currentPos = currentPos;
+    }
+
+    public Type getType() { return type; }
+    public String getEventId() { return eventId; }
+    public Stage getLastPos() { return lastPos; }
+    public Stage getCurrentPos() { return currentPos; }
+  }
+
   private List<Stage> stageList = new ArrayList<>();
   private Floor currentFloor;
 
@@ -26,6 +49,36 @@ public class StageManager {
       }
     }
     System.out.println("시스템: 200개의 스테이지 객체가 생성되었습니다.");
+  }
+
+  /** 층별 이벤트 타일 배치 */
+  public void placeEvents() {
+    // 2층: 주석 나뭇가지(c_3), 세미콜론 발견(b_2)
+    setEvent(2, 3, "c", EventManager.COMMENT_BRANCH);
+    setEvent(2, 2, "b", EventManager.SEMICOLON_FIND);
+
+    // 3층: 세미콜론 문(d_2), 인터프리터 로봇(c_4)
+    setEvent(3, 2, "d", EventManager.SEMICOLON_DOOR);
+    setEvent(3, 4, "c", EventManager.INTERPRETER_ROBOT);
+
+    // 4층: 선혁 의심(b_3)
+    setEvent(4, 3, "b", EventManager.SUSPECT_SUNHYUK);
+
+    // 6층: 캐시 전투(c_2)
+    setEvent(6, 2, "c", EventManager.CACHE_BATTLE);
+
+    // 7층: 힙 영역 진입(b_4)
+    setEvent(7, 4, "b", EventManager.HEAP_ENTRY);
+  }
+
+  /** 특정 층/위치에 이벤트 설정 */
+  private void setEvent(int floorLevel, int row, String column, String eventId) {
+    Floor floor = findFloor(floorLevel);
+    if (floor == null) return;
+    Stage stage = getStageAt(row, column, floor);
+    if (stage != null) {
+      stage.setEventId(eventId);
+    }
   }
 
 /*
@@ -109,11 +162,10 @@ public class StageManager {
   }
 
   // ============================================
-  // 맵 탐색 루프 (도착점 a_5 도달 시 종료)
+  // 맵 탐색 루프 (도착점 a_5 도달 또는 이벤트 타일 도달 시 종료)
   // startPos가 null이면 e_1에서 시작
-  // 반환값: 출구 도달 직전 위치 (도망 복귀용)
   // ============================================
-  public Stage exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
     Floor floor = findFloor(floorLevel);
     if (floor == null) return null;
 
@@ -145,19 +197,26 @@ public class StageManager {
         }
       } else {
         gameView.showMapAlert("더 이상 갈 수 없습니다.");
+        continue;
+      }
+
+      // 이벤트 타일 도달
+      if (currentPos.getEventId() != null) {
+        return new ExploreResult(ExploreResult.Type.EVENT,
+                currentPos.getEventId(), prevPos, currentPos);
       }
 
       // 도착점 도달
       if (currentPos.getColumn().equals("a") && currentPos.getRow() == 5) {
         gameView.showMessage("\n>> 출구를 발견했다!");
         gameView.waitForEnter();
-        return prevPos;
+        return new ExploreResult(ExploreResult.Type.EXIT, null, prevPos, currentPos);
       }
     }
   }
 
   /** 기본 시작 위치(e_1)로 탐색 */
-  public Stage exploreFloor(int floorLevel, GameView gameView) {
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView) {
     return exploreFloor(floorLevel, gameView, null);
   }
 
