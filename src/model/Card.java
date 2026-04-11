@@ -15,9 +15,12 @@ class AttackEffect implements CardEffect {
     }
     
     public int execute(Entity user, Entity target) {
-        target.takeDamage(power);
-        System.out.println(">> " + power + " 데미지를 입혔다!");
-        return power;
+        int min = user.getPowerMin();
+        int max = user.getPowerMax();
+        int base = (max > min) ? min + (int)(Math.random() * (max - min + 1)) : min;
+        int total = base + card.getCPower();
+        target.takeDamage(total);
+        return total;
     }
     
     public String getDescription() {

@@ -59,6 +59,18 @@ public class CollectionDAO {
     }
   }
 
+  public void saveEnding(String eId, int tryNum) {
+    String sql = "INSERT INTO e_save (e_id, try, e_count) VALUES (?, ?, 1)";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, eId);
+      pstmt.setInt(2, tryNum);
+      pstmt.executeUpdate();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
   public int getTotalEndingCount() {
     String sql = "SELECT COUNT(*) FROM ending";
     try (Connection conn = DBConnection.getConnection();

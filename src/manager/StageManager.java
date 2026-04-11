@@ -157,6 +157,10 @@ public class StageManager {
     this.currentTryNum = tryNum;
   }
 
+  public int getCurrentTryNum() {
+    return currentTryNum;
+  }
+
 
   // 특정 층 탐색
   private Floor findFloor(int level) {
@@ -292,8 +296,11 @@ public class StageManager {
         if ("event_semicolon".equals(sType)) {
           // 세미콜론 이벤트: 3회 방문 시 발동
           trigger = currentPos.getVisitCount() >= 3;
+        } else if ("event_door".equals(sType) || "event_betrayal".equals(sType) || "event_heap".equals(sType)) {
+          // 스토리 이벤트: 항상 발동
+          trigger = true;
         } else {
-          // 그 외: s_prob 확률 기반
+          // 그 외(event_comment, event_cache, npc_i): s_prob 확률 기반
           trigger = Math.random() * 100 < currentPos.getS_prob();
         }
 
