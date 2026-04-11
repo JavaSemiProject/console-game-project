@@ -10,10 +10,16 @@ public class NPC implements Entity {
     private int powerMin;
     private int powerMax;
     private int pp;       // 조사 키 (particle)
-    private String cId;   // 보유 카드 ID (nullable)
+    private String cId;   // 처치 시 드롭 카드 ID (nullable)
+    private String iId;   // 처치 시 드롭 아이템 ID (nullable)
 
     public NPC(String nId, String nName, String nDesc, int health,
                boolean isBoss, int powerMin, int powerMax, int pp, String cId) {
+        this(nId, nName, nDesc, health, isBoss, powerMin, powerMax, pp, cId, null);
+    }
+
+    public NPC(String nId, String nName, String nDesc, int health,
+               boolean isBoss, int powerMin, int powerMax, int pp, String cId, String iId) {
         this.nId = nId;
         this.nName = nName;
         this.nDesc = nDesc;
@@ -24,6 +30,7 @@ public class NPC implements Entity {
         this.powerMax = powerMax;
         this.pp = pp;
         this.cId = cId;
+        this.iId = iId;
     }
 
     public boolean isAlive() {
@@ -61,6 +68,8 @@ public class NPC implements Entity {
     public int getPowerMax() { return powerMax; }
     public int getPp() { return pp; }
     public String getCId() { return cId; }
+    public String getIId() { return iId; }
+    public void setIId(String iId) { this.iId = iId; }
 
     // --- Setters ---
 
