@@ -1,5 +1,6 @@
 package view;
 
+import dao.ParticleDAO;
 import model.*;
 
 import java.io.IOException;
@@ -180,10 +181,10 @@ public class GameView {
     }
 
     /** 전투 시작 연출 */
-    public void showBattleStart(String enemyName) {
+    public void showBattleStart(String enemyName, int enemyPp) {
         clearScreen();
         printSlow("=================================");
-        printSlow("  " + enemyName + "이(가) 나타났다!");
+        printSlow("  " + enemyName + ParticleDAO.lg(enemyPp) + " 나타났다!");
         printSlow("=================================");
         System.out.println();
     }
@@ -292,24 +293,35 @@ public class GameView {
     }
 
     /** 공격 결과 출력 */
-    public void showAttackResult(String attackerName, String cardName, int damage) {
+    public void showAttackResult(String attackerName, int attackerPp,
+                                 Card card,
+                                 String targetName, int targetPp,
+                                 int damage) {
         clearBelow();
-        printSlow(attackerName + "의 " + cardName + "! " + damage + " 데미지!");
+        printSlow(attackerName + ParticleDAO.lg(attackerPp) + " "
+                + card.getCName() + ParticleDAO.er(card.getPp()) + " 사용했다.");
+        if (card.getCUseMsg() != null && !card.getCUseMsg().isEmpty()) {
+            printSlow(card.getCUseMsg());
+        }
+        printSlow(targetName + ParticleDAO.lg(targetPp) + " " + damage + "의 대미지를 입었다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 아이템 사용 결과 출력 */
-    public void showItemUseResult(String itemName) {
+    public void showItemUseResult(Item item) {
         clearBelow();
-        printSlow(itemName + "을(를) 사용했다!");
+        printSlow(item.getIName() + ParticleDAO.er(item.getPp()) + " 사용했다.");
+        if (item.getIUseMsg() != null && !item.getIUseMsg().isEmpty()) {
+            printSlow(item.getIUseMsg());
+        }
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 전투 승리 */
-    public void showBattleWin(String enemyName) {
+    public void showBattleWin(String enemyName, int enemyPp) {
         clearBelow();
         printSlow("=================================");
-        printSlow("  " + enemyName + "을(를) 쓰러뜨렸다!");
+        printSlow("  " + enemyName + ParticleDAO.er(enemyPp) + " 쓰러뜨렸다!");
         printSlow("=================================");
         waitForEnter();
     }
@@ -330,9 +342,9 @@ public class GameView {
     }
 
     /** 적이 도망 */
-    public void showEnemyFled(String enemyName) {
+    public void showEnemyFled(String enemyName, int enemyPp) {
         clearBelow();
-        printSlow(enemyName + "이(가) 도망쳤다!");
+        printSlow(enemyName + ParticleDAO.lg(enemyPp) + " 도망쳤다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
@@ -560,6 +572,7 @@ public class GameView {
     /** 카드/아이템 획득 연출 */
     public void showAcquire(String itemName) {
         printSlow("『" + itemName + "』을(를) 획득했다!");
+        waitForEnter();
     }
 
     /** 엔딩 타이틀 출력 */
