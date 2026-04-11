@@ -129,10 +129,9 @@ public class GameView {
             } else {
                 skip = printSlow(line);
             }
-
-            // 줄 사이 0.5초 대기 (스킵 체크)
+            // 줄 사이 0.3초 대기
             if (!skip && i < lines.size() - 1) {
-                skip = sleepWithSkipCheck(500);
+                skip = sleepWithSkipCheck(300);
             }
         }
 
@@ -247,7 +246,11 @@ public class GameView {
         System.out.println("사용할 카드를 선택하세요 (0: 취소):");
         for (int i = 0; i < cards.size(); i++) {
             Card c = cards.get(i);
-            System.out.println((i + 1) + ". " + c.getCName() + " (ATK:" + c.getCPower() + ")");
+            if (c.getCPower() > 0) {
+                System.out.println((i + 1) + ". " + c.getCName() + " (ATK:" + c.getCPower() + ")");
+            } else {
+                System.out.println((i + 1) + ". " + c.getCName());
+            }
         }
         System.out.print(">> ");
 
@@ -326,6 +329,27 @@ public class GameView {
         printSlow("도망쳤다!");
     }
 
+    /** Scanner 방어 성공 */
+    public void showScannerBlock(int useCount) {
+        clearBelow();
+        printSlow("Scanner로 적의 공격을 막았다! (" + useCount + "/3)");
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+    }
+
+    /** Scanner 흡수 — 혜진 전투 종료 */
+    public void showScannerCapture() {
+        clearBelow();
+        printSlow("어라..? 혜진이 Scanner로 빨려들어갔다!");
+        try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+    }
+
+    /** 적 공격 막힘 */
+    public void showBlockedAttack(String enemyName) {
+        clearBelow();
+        printSlow(enemyName + "의 공격이 막혔다!");
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+    }
+
     // ============================================
     // 맵 탐색
     // ============================================
@@ -352,7 +376,18 @@ public class GameView {
             for (int c = 1; c <= 5; c++) {
                 boolean isHere = currentPos.getRow() == c
                         && currentPos.getColumn().equals(String.valueOf(r));
-                System.out.print(isHere ? " @  " : " .  ");
+                if (isHere) {
+                    System.out.print(" @  ");
+                } else {
+                    // 해당 위치의 Stage를 찾아 이벤트 타일 여부 확인
+                    final int col = c;
+                    final String row = String.valueOf(r);
+                    Stage tile = floor.getStages().stream()
+                            .filter(s -> s.getRow() == col && s.getColumn().equals(row))
+                            .findFirst().orElse(null);
+                    boolean isEvent = tile != null && tile.getEventId() != null;
+                    System.out.print(isEvent ? " !  " : " .  ");
+                }
             }
             System.out.println();
         }
