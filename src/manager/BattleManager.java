@@ -6,6 +6,7 @@ import model.Entity;
 import view.GameView;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BattleManager {
 
@@ -23,6 +24,13 @@ public class BattleManager {
         this.gameView = gameView;
     }
 
+    /** 전투에서 사용 가능한 카드만 필터링 */
+    private List<Card> combatCards(List<Card> cards) {
+        return cards.stream()
+                .filter(Card::isCombatUsable)
+                .collect(Collectors.toList());
+    }
+
     // ============================================
     // 혜진 전투 (Scanner = 방어 카드, 3회 사용 시 흡수 승리)
     // ============================================
@@ -36,15 +44,16 @@ public class BattleManager {
 
             // --- 플레이어 턴 ---
             gameView.showBattleStatus(player, enemy, enemyName);
-            int choice = gameView.showPlayerMenu(playerCards.size(), playerItems.size());
+            List<Card> usableCards = combatCards(playerCards);
+            int choice = gameView.showPlayerMenu(usableCards.size(), playerItems.size());
 
             boolean usedScanner = false;
 
             switch (choice) {
                 case 1: // 카드 사용
-                    int cardIdx = gameView.showCardList(playerCards);
+                    int cardIdx = gameView.showCardList(usableCards);
                     if (cardIdx <= 0) continue;
-                    Card selected = playerCards.get(cardIdx - 1);
+                    Card selected = usableCards.get(cardIdx - 1);
 
                     if ("C001".equals(selected.getCId())) {
                         // Scanner → 방어 모드: 공격하지 않고 이번 턴 적 공격을 막음
@@ -116,13 +125,14 @@ public class BattleManager {
 
             // --- 플레이어 턴 ---
             gameView.showBattleStatus(player, enemy, enemyName);
-            int choice = gameView.showPlayerMenu(playerCards.size(), playerItems.size());
+            List<Card> usableCards = combatCards(playerCards);
+            int choice = gameView.showPlayerMenu(usableCards.size(), playerItems.size());
 
             switch (choice) {
                 case 1:
-                    int cardIdx = gameView.showCardList(playerCards);
+                    int cardIdx = gameView.showCardList(usableCards);
                     if (cardIdx <= 0) continue;
-                    Card selected = playerCards.get(cardIdx - 1);
+                    Card selected = usableCards.get(cardIdx - 1);
                     int damage = selected.use(player, enemy);
                     gameView.showAttackResult("영균", selected.getCName(), damage);
                     break;
@@ -180,13 +190,14 @@ public class BattleManager {
 
             // --- 플레이어 턴 ---
             gameView.showBattleStatus(player, enemy, enemyName);
-            int choice = gameView.showPlayerMenu(playerCards.size(), playerItems.size());
+            List<Card> usableCards = combatCards(playerCards);
+            int choice = gameView.showPlayerMenu(usableCards.size(), playerItems.size());
 
             switch (choice) {
                 case 1: // 카드 사용 (공격)
-                    int cardIdx = gameView.showCardList(playerCards);
+                    int cardIdx = gameView.showCardList(usableCards);
                     if (cardIdx <= 0) continue;  // 취소 또는 빈 목록 → 다시 메뉴
-                    Card selected = playerCards.get(cardIdx - 1);
+                    Card selected = usableCards.get(cardIdx - 1);
                     int damage = selected.use(player, enemy);
                     gameView.showAttackResult("영균", selected.getCName(), damage);
                     break;

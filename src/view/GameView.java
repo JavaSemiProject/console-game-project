@@ -446,7 +446,7 @@ public class GameView {
         }
 
         System.out.println();
-        System.out.println("이동: w(상) a(좌) s(하) d(우)");
+        System.out.println("이동: w(상) a(좌) s(하) d(우)  |  i: 인벤토리");
     }
     /** s_type → 맵 심볼 변환 */
     private String getSymbol(Stage s) {
@@ -469,6 +469,40 @@ public class GameView {
     public String getMovementInput() {
         System.out.print(">> ");
         return scanner.nextLine().trim().toLowerCase();
+    }
+
+    /** 탐색 중 인벤토리 조회 (읽기 전용) */
+    public void showInventoryView(List<Card> cards, List<Item> items) {
+        clearScreen();
+        System.out.println("========== 인벤토리 ==========");
+
+        System.out.println("\n[ 카드 ]");
+        if (cards.isEmpty()) {
+            System.out.println("  보유한 카드가 없습니다.");
+        } else {
+            for (int i = 0; i < cards.size(); i++) {
+                Card c = cards.get(i);
+                if (c.getCPower() > 0) {
+                    System.out.printf("  %d. %-20s ATK: %d%n", i + 1, c.getCName(), c.getCPower());
+                } else {
+                    System.out.printf("  %d. %s%n", i + 1, c.getCName());
+                }
+            }
+        }
+
+        System.out.println("\n[ 아이템 ]");
+        if (items.isEmpty()) {
+            System.out.println("  보유한 아이템이 없습니다.");
+        } else {
+            for (int i = 0; i < items.size(); i++) {
+                Item it = items.get(i);
+                System.out.printf("  %d. %s%n", i + 1, it.getIName());
+            }
+        }
+
+        System.out.println("\n==============================");
+        System.out.println("[ Enter: 돌아가기 ]");
+        scanner.nextLine();
     }
 
     /** 맵 경고 메시지 (경계 밖 이동 등) */

@@ -2,7 +2,9 @@ package manager;
 
 import dao.SaveDAO;
 import dao.StageDAO;
+import model.Card;
 import model.Floor;
+import model.Item;
 import model.NPC;
 import model.Stage;
 import view.GameView;
@@ -209,7 +211,8 @@ public class StageManager {
   // 맵 탐색 루프 (도착점 a_5 도달 또는 이벤트 타일 도달 시 종료)
   // startPos가 null이면 e_1에서 시작
   // ============================================
-  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos,
+                                    List<Card> cards, List<Item> items) {
     Floor floor = findFloor(floorLevel);
     System.out.println("[DEBUG] exploreFloor(" + floorLevel + ") floor=" + floor
         + " stageCount=" + (floor != null ? floor.getStages().size() : 0));
@@ -235,6 +238,11 @@ public class StageManager {
     while (true) {
       gameView.showMap(floor, currentPos);
       String input = gameView.getMovementInput();
+
+      if ("i".equals(input)) {
+        gameView.showInventoryView(cards, items);
+        continue;
+      }
 
       int nextRow = currentPos.getRow();
       char nextCol = currentPos.getColumn().charAt(0);
@@ -275,11 +283,21 @@ public class StageManager {
         return new ExploreResult(ExploreResult.Type.EXIT, null, prevPos, currentPos);
       }
 
-      // 확률 기반 npc_i / event_* 처리
+      // 이벤트/NPC 타일 처리
       String sType = currentPos.getS_type();
       if (!currentPos.isConsumed() && needsProbCheck(sType)) {
-        double roll = Math.random() * 100;
-        if (roll < currentPos.getS_prob()) {
+        currentPos.incrementVisit();
+
+        boolean trigger;
+        if ("event_semicolon".equals(sType)) {
+          // 세미콜론 이벤트: 3회 방문 시 발동
+          trigger = currentPos.getVisitCount() >= 3;
+        } else {
+          // 그 외: s_prob 확률 기반
+          trigger = Math.random() * 100 < currentPos.getS_prob();
+        }
+
+        if (trigger) {
           if ("npc_i".equals(sType)) {
             return new ExploreResult(ExploreResult.Type.NPC_ENCOUNTER,
                 currentPos.getNId(), prevPos, currentPos);
@@ -294,9 +312,9 @@ public class StageManager {
     }
   }
 
-  /** 기본 시작 위치(e_1)로 탐색 */
-  public ExploreResult exploreFloor(int floorLevel, GameView gameView) {
-    return exploreFloor(floorLevel, gameView, null);
+  /** startPos 지정, 인벤토리 없이 탐색 (보스 도망 복귀 등 내부용) */
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+    return exploreFloor(floorLevel, gameView, startPos, new ArrayList<>(), new ArrayList<>());
   }
 
   public Floor getFloor(int level) {

@@ -1,5 +1,7 @@
 package manager;
 
+import dao.CardDAO;
+import dao.ItemDAO;
 import dao.SaveDAO;
 import dao.StageDAO;
 import manager.BattleManager.BattleResult;
@@ -142,8 +144,19 @@ public class GameManager {
         BattleResult br = battleManager.startBattle(
                 hero, npc, npc.getNName(), playerCards, playerItems, npcCard);
 
-        if (br == BattleResult.WIN) restAfterBattle();
-        else if (br == BattleResult.LOSE) state = GameState.GAME_OVER;
+        if (br == BattleResult.WIN) {
+            restAfterBattle();
+            if (npc.getCId() != null) {
+                Card drop = new CardDAO().findById(npc.getCId());
+                if (drop != null) { playerCards.add(drop); gameView.showAcquire(drop.getCName()); }
+            }
+            if (npc.getIId() != null) {
+                Item dropItem = new ItemDAO().findById(npc.getIId());
+                if (dropItem != null) { playerItems.add(dropItem); gameView.showAcquire(dropItem.getIName()); }
+            }
+        } else if (br == BattleResult.LOSE) {
+            state = GameState.GAME_OVER;
+        }
         return br;
     }
 
@@ -178,7 +191,7 @@ public class GameManager {
             // FLEE → 직전 위치로 복귀 후 다시 출구 찾기
             gameView.showMessage("도망쳤다... 다시 출구를 찾아야 한다.");
             gameView.waitForEnter();
-            ExploreResult fleeResult = stageManager.exploreFloor(floorLevel, gameView, lastPos);
+            ExploreResult fleeResult = stageManager.exploreFloor(floorLevel, gameView, lastPos, playerCards, playerItems);
             if (fleeResult != null) lastPos = fleeResult.getLastPos();
         }
     }
@@ -312,7 +325,7 @@ public class GameManager {
 
         model.Stage resumePos = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(2, gameView, resumePos);
+            ExploreResult result = stageManager.exploreFloor(2, gameView, resumePos, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -330,6 +343,11 @@ public class GameManager {
             } else if (EventManager.SEMICOLON_FIND.equals(eid)) {
                 showDialogue("floor2", "semicolon_find");
                 hasSemicolon = true;
+                Card semicolonCard = new CardDAO().findById("c3");
+                if (semicolonCard != null) {
+                    semicolonCard.setCombatUsable(false);
+                    playerCards.add(semicolonCard);
+                }
                 gameView.showAcquire("; (세미콜론)");
                 result.getCurrentPos().consume();
             }
@@ -357,7 +375,7 @@ public class GameManager {
 
         model.Stage resumePos3 = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(3, gameView, resumePos3);
+            ExploreResult result = stageManager.exploreFloor(3, gameView, resumePos3, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -403,7 +421,7 @@ public class GameManager {
 
         model.Stage resumePos = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(4, gameView, resumePos);
+            ExploreResult result = stageManager.exploreFloor(4, gameView, resumePos, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -458,7 +476,7 @@ public class GameManager {
 
         model.Stage resumePos5 = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(5, gameView, resumePos5);
+            ExploreResult result = stageManager.exploreFloor(5, gameView, resumePos5, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -491,7 +509,7 @@ public class GameManager {
 
         model.Stage resumePos6 = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(6, gameView, resumePos6);
+            ExploreResult result = stageManager.exploreFloor(6, gameView, resumePos6, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -530,7 +548,7 @@ public class GameManager {
 
         model.Stage resumePos = null;
         while (true) {
-            ExploreResult result = stageManager.exploreFloor(7, gameView, resumePos);
+            ExploreResult result = stageManager.exploreFloor(7, gameView, resumePos, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
@@ -587,7 +605,7 @@ public class GameManager {
             // FLEE → 직전 위치로 복귀 후 재도전
             gameView.showMessage("도망쳤다... 다시 출구를 찾아야 한다.");
             gameView.waitForEnter();
-            ExploreResult fleeResult7 = stageManager.exploreFloor(7, gameView, lastPos);
+            ExploreResult fleeResult7 = stageManager.exploreFloor(7, gameView, lastPos, playerCards, playerItems);
             if (fleeResult7 != null) lastPos = fleeResult7.getLastPos();
         }
     }
