@@ -13,7 +13,10 @@ import model.*;
 
 public class CardDAO {
   public Card findById(String cId) {
-    String sql = "SELECT * FROM card WHERE c_id = ?";
+    String sql = """
+      SELECT c.*, (SELECT MIN(cs.`try`) FROM c_save cs WHERE cs.c_id = c.c_id) as first_try
+      FROM card c WHERE c.c_id = ?
+    """;
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setString(1, cId);
@@ -31,7 +34,8 @@ public class CardDAO {
   public List<Card> findAllByTry(int tryNum) {
     List<Card> cards = new ArrayList<>();
     String sql = """
-      SELECT c. * FROM card c
+      SELECT c.*, (SELECT MIN(cs2.`try`) FROM c_save cs2 WHERE cs2.c_id = c.c_id) as first_try
+      FROM card c
       JOIN c_save cs ON c.c_id = cs.c_id
       WHERE cs.`try` = ?
     """;
@@ -55,12 +59,12 @@ public class CardDAO {
         rs.getString("c_id"),
         rs.getInt("pp"),
         rs.getString("c_name"),
-        rs.getString("method"),
-        rs.getInt("power"),
-        rs.getString("desc"),
+        rs.getString("c_desc"),
+        rs.getInt("c_power"),
+        rs.getString("c_desc"),
         rs.getString("c_use_msg"),
         rs.getString("c_img"),
-        rs.getInt("try")
+        rs.getInt("first_try")
     );
   }
 

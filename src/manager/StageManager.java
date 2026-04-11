@@ -12,6 +12,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StageManager {
+
+  /** 맵 탐색 결과 */
+  public static class ExploreResult {
+    public enum Type { EXIT, EVENT, NPC_ENCOUNTER }
+
+    private final Type type;
+    private final String eventId;   // EVENT일 때만 유효
+    private final Stage lastPos;    // 출구/이벤트 직전 위치 (도망 복귀용)
+    private final Stage currentPos; // 이벤트 발생 위치 (탐색 재개용)
+
+    public ExploreResult(Type type, String eventId, Stage lastPos, Stage currentPos) {
+      this.type = type;
+      this.eventId = eventId;
+      this.lastPos = lastPos;
+      this.currentPos = currentPos;
+    }
+
+    public Type getType() { return type; }
+    public String getEventId() { return eventId; }
+    public Stage getLastPos() { return lastPos; }
+    public Stage getCurrentPos() { return currentPos; }
+  }
+
   private List<Stage> stageList = new ArrayList<>();
   private Floor currentFloor;
   private NPCDAO npcDAO = new NPCDAO();
@@ -63,6 +86,29 @@ public class StageManager {
     System.out.println("시스템: 200개의 스테이지 객체가 생성되었습니다.");
   }
 */
+
+  /** s_type → EventManager 상수 매핑 */
+  private String mapTypeToEventId(String sType) {
+    switch (sType) {
+      case "event_comment":   return EventManager.COMMENT_BRANCH;
+      case "event_semicolon": return EventManager.SEMICOLON_FIND;
+      case "event_door":      return EventManager.SEMICOLON_DOOR;
+      case "event_betrayal":  return EventManager.SUSPECT_SUNHYUK;
+      case "event_cache":     return EventManager.CACHE_BATTLE;
+      case "event_heap":      return EventManager.HEAP_ENTRY;
+      default: return null;
+    }
+  }
+
+  /** 확률 체크가 필요한 타입인지 */
+  private boolean needsProbCheck(String sType) {
+    return sType != null && (sType.equals("npc_i") || sType.startsWith("event_"));
+  }
+
+  /** NPC ID로 NPC 조회 */
+  public NPC getNpcById(String nId) {
+    return npcDAO.findById(nId);
+  }
 /*
   // 테스트 전용-2
   public void printFullMap() {
@@ -159,23 +205,14 @@ public class StageManager {
         .orElse(null);
   }
 
-  public static class FloorResult {
-    public final Stage prevPos;
-    public final NPC boss;  // finish 도달 시 해당 층 보스
-
-    public FloorResult(Stage prevPos, NPC boss) {
-      this.prevPos = prevPos;
-      this.boss = boss;
-    }
-  }
   // ============================================
-  // 맵 탐색 루프 (도착점 a_5 도달 시 종료)
+  // 맵 탐색 루프 (도착점 a_5 도달 또는 이벤트 타일 도달 시 종료)
   // startPos가 null이면 e_1에서 시작
-  // 반환값: 출구 도달 직전 위치 (도망 복귀용)
   // ============================================
-
-  public FloorResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
     Floor floor = findFloor(floorLevel);
+    System.out.println("[DEBUG] exploreFloor(" + floorLevel + ") floor=" + floor
+        + " stageCount=" + (floor != null ? floor.getStages().size() : 0));
     if (floor == null) return null;
 
     Stage currentPos;
@@ -187,6 +224,9 @@ public class StageManager {
           .findFirst()
           .orElse(getStageAt(1, "e", floor));
     }
+    System.out.println("[DEBUG] currentPos=" + (currentPos != null
+        ? currentPos.getColumn() + "_" + currentPos.getRow() + " type=" + currentPos.getS_type()
+        : "null"));
     if (currentPos == null) return null;
 
     Stage prevPos = currentPos;
@@ -208,25 +248,23 @@ public class StageManager {
       }
 
       Stage next = getStageAt(nextRow, String.valueOf(nextCol), floor);
-      if (next != null) {
-        if ("v".equals(next.getS_type())) {  // v만 장애물로 처리
-          gameView.showMapAlert("장애물에 막혔습니다.");
-        } else {
-          // w(빈칸), N, I, E, F 등은 모두 통과
-          prevPos = currentPos;
-          currentPos = next;
-          autoSaveIfStart(currentPos, gameView);
-        }
-      } else {
-        gameView.showMapAlert("더 이상 갈 수 없습니다.");  // 맵 밖
+      if (next == null) {
+        gameView.showMapAlert("더 이상 갈 수 없습니다.");
+        continue;
+      }
+      if ("w".equals(next.getS_type())) {
+        gameView.showMapAlert("길이 막혀있다.");
+        continue;
       }
 
-      // finish 도달 시 DB에서 보스 조회 후 반환
+      prevPos = currentPos;
+      currentPos = next;
+      autoSaveIfStart(currentPos, gameView);
+
+      // finish 도달 시 종료
       if ("finish".equals(currentPos.getS_type())) {
         gameView.showMessage("\n>> 출구를 발견했다!");
         gameView.waitForEnter();
-
-        // 다음 층 start 자동 저장
         Stage nextFloorStart = findStageStart(floorLevel + 1);
         if (nextFloorStart != null && currentTryNum != -1) {
           boolean saved = saveDAO.updateStage(nextFloorStart.getStageName(), currentTryNum);
@@ -234,16 +272,30 @@ public class StageManager {
               ? "[AutoSave] ✔ 저장 완료: " + nextFloorStart.getStageName()
               : "[AutoSave] ✘ 저장 실패");
         }
+        return new ExploreResult(ExploreResult.Type.EXIT, null, prevPos, currentPos);
+      }
 
-        // DB에서 해당 층 보스 조회
-        NPC boss = getBossForFloor(floorLevel);
-        return new FloorResult(prevPos, boss);
+      // 확률 기반 npc_i / event_* 처리
+      String sType = currentPos.getS_type();
+      if (!currentPos.isConsumed() && needsProbCheck(sType)) {
+        double roll = Math.random() * 100;
+        if (roll < currentPos.getS_prob()) {
+          if ("npc_i".equals(sType)) {
+            return new ExploreResult(ExploreResult.Type.NPC_ENCOUNTER,
+                currentPos.getNId(), prevPos, currentPos);
+          }
+          String eventId = mapTypeToEventId(sType);
+          if (eventId != null) {
+            return new ExploreResult(ExploreResult.Type.EVENT,
+                eventId, prevPos, currentPos);
+          }
+        }
       }
     }
   }
 
-  // 오버로드
-  public FloorResult exploreFloor(int floorLevel, GameView gameView) {
+  /** 기본 시작 위치(e_1)로 탐색 */
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView) {
     return exploreFloor(floorLevel, gameView, null);
   }
 

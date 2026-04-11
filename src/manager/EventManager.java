@@ -57,6 +57,10 @@ public class EventManager {
         this.interpreterRobotDone = done;
     }
 
+    public int getVisitCount() {
+        return visitCount;
+    }
+
     public void setVisitCount(int count) {
         this.visitCount = count;
     }

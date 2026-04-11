@@ -7,8 +7,11 @@ public class Stage {
   private int row;
   private String column;
   private int fLevel;
+  private String eventId;  // null이면 일반 타일, 값이 있으면 이벤트 타일
   private String s_type;
   private Double s_prob;
+  private String nId;       // npc_i 타일의 NPC ID (n_id 컬럼)
+  private boolean consumed; // 일회성 이벤트 소모 여부
 
   public Stage(String stageId, String stageName, int row, String column, int fLevel, String s_type, Double s_prob){
     this.stageId = stageId;
@@ -16,8 +19,10 @@ public class Stage {
     this.row = row;
     this.column = column;
     this.fLevel = fLevel;
+    this.eventId = null;
     this.s_type = s_type;
     this.s_prob = s_prob;
+    this.consumed = false;
   }
 
   public String getStageId() {return stageId;}
@@ -27,8 +32,15 @@ public class Stage {
   public int getRow(){return row;}
   public String getColumn(){return column;}
   public int getFlevel(){return fLevel;}
+  public String getEventId() {return eventId;}
+  public void setEventId(String eventId) {this.eventId = eventId;}
+
   public String getS_type() {return s_type;}
   public Double getS_prob() {return s_prob;}
+  public String getNId() { return nId; }
+  public void setNId(String nId) { this.nId = nId; }
+  public boolean isConsumed() { return consumed; }
+  public void consume() { this.consumed = true; }
   @Override
   public String toString(){
     return String.format("Stage{id=%d, name = '%s'}", stageId, stageName);
