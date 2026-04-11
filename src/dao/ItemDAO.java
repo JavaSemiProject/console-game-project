@@ -12,7 +12,10 @@ import java.util.List;
 
 public class ItemDAO {
 public Item findById(String iId){
-  String sql = "SELECT * FROM item WHERE i_id = ?";
+  String sql = """
+      SELECT i.*, (SELECT MIN(isv.`try`) FROM i_save isv WHERE isv.i_id = i.i_id) as first_try
+      FROM item i WHERE i.i_id = ?
+      """;
   try (Connection conn = DBConnection.getConnection();
        PreparedStatement pstmt = conn.prepareStatement(sql)){
     pstmt.setString(1, iId);
@@ -30,9 +33,10 @@ public Item findById(String iId){
 public List<Item> findAllByTry(int tryNum) {
   List<Item> items = new ArrayList<>();
   String sql = """
-      SELECT i.* FROM item i
+      SELECT i.*, (SELECT MIN(isv2.`try`) FROM i_save isv2 WHERE isv2.i_id = i.i_id) as first_try
+      FROM item i
       JOIN i_save isv ON i.i_id = isv.i_id
-      WHERE isv.`try`= ?
+      WHERE isv.`try` = ?
       """;
   try (Connection conn = DBConnection.getConnection();
        PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -53,12 +57,12 @@ public List<Item> findAllByTry(int tryNum) {
         rs.getString("i_id"),
         rs.getString("i_name"),
         rs.getInt("heal"),
-        rs.getInt("power"),
+        rs.getInt("i_power"),
         rs.getInt("hp"),
         rs.getString("i_desc"),
         rs.getString("i_use_msg"),
         rs.getString("i_img"),
-        rs.getInt("try"),
+        rs.getInt("first_try"),
         rs.getInt("pp")
     );
   }

@@ -81,12 +81,12 @@ public class SaveDAO {
   }
 
   public int getLatestTryNum() {
-    String sql = "SELECT MAX(id) as latest FROM save";
+    String sql = "SELECT MAX(`try`) as latest FROM save";
     try (Connection conn = getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql);
          ResultSet rs = pstmt.executeQuery()) {
       if (rs.next()) {
-        Integer latest = rs.getInt("latest");
+        int latest = rs.getInt("latest");
         return latest > 0 ? latest : -1;
       }
     } catch (Exception e) {
@@ -96,16 +96,17 @@ public class SaveDAO {
   }
 
   public String getLatestStage(int tryNum) {
-    String sql = "SELECT stage_name FROM save WHERE id = ? ORDER BY created_at DESC LIMIT 1";
+    String sql = "SELECT s_id FROM save WHERE `try` = ?";
     try (Connection conn = getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setInt(1, tryNum);
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
-          return rs.getString("stage_name");
+          return rs.getString("s_id");
         }
       }
     } catch (Exception e) {
+      e.printStackTrace();
     }
     return null;
   }
