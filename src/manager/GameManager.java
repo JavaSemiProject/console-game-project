@@ -415,10 +415,21 @@ public class GameManager {
 
             String eid = result.getEventId();
             if (EventManager.CACHE_BATTLE.equals(eid)) {
-                EventResult er = eventManager.trigger(eid);
-                if (er == EventResult.START_BATTLE) {
-                    showDialogue("floor6", "cache_battle");
-                    // TODO: 캐시 전투 NPC/카드 정의 후 전투 시작
+                showDialogue("floor6", "cache_battle");
+
+                NPC cache = new NPC("M_CACHE", "캐시",
+                        "빠르게 움직이는 캐시 몬스터.", 40, false, 6, 10, 1, null);
+                Card cacheCard = createEnemyCard("캐시", 12);
+                BattleResult br = battleManager.startCacheBattle(
+                        hero, cache, "캐시", playerCards, playerItems, cacheCard);
+
+                if (br == BattleResult.WIN) {
+                    showDialogue("floor6", "cache_battle_win");
+                } else if (br == BattleResult.ENEMY_FLED) {
+                    showDialogue("floor6", "cache_battle_lose");
+                } else if (br == BattleResult.LOSE) {
+                    state = GameState.GAME_OVER;
+                    return;
                 }
             }
             result.getCurrentPos().setEventId(null);
@@ -470,7 +481,7 @@ public class GameManager {
 
     /** 7층 보스전 (히든맵 전후 공용). 승리 시 true 반환. */
     private boolean fightFloor7Boss(model.Stage lastPos) {
-        String startTag = hyejinRoute ? "battle_boss_start_with_hyejin" : "battle_boss_start_without_heyjin";
+        String startTag = hyejinRoute ? "battle_boss_start_with_hyejin" : "battle_boss_start_without_hyejin";
         String winTag = hyejinRoute ? "battle_boss_win_with_hyejin" : "battle_boss_win_without_hyejin";
 
         while (true) {
@@ -602,6 +613,13 @@ public class GameManager {
         // TODO: ending 테이블에서 엔딩 메시지 조회 후 출력
         // TODO: collectionManager.unlockEnding(endingId, currentTry);
         gameView.waitForEnter();
+
+        // 승리 엔딩(SHORTCUT, HYEJIN, NO_HYEJIN)에서 엔딩 크레딧 출력
+        if ("SHORTCUT".equals(endingType) || "HYEJIN".equals(endingType)
+                || "NO_HYEJIN".equals(endingType)) {
+            showDialogue("system", "ending_credit");
+        }
+
         state = GameState.GAME_OVER;
     }
 

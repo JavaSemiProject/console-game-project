@@ -13,7 +13,8 @@ public class BattleManager {
         WIN,
         LOSE,
         FLEE,
-        SCANNER_CAPTURE   // 혜진이 Scanner에 빨려들어감
+        SCANNER_CAPTURE,  // 혜진이 Scanner에 빨려들어감
+        ENEMY_FLED        // 적이 도망감 (캐시 전투)
     }
 
     private GameView gameView;
@@ -92,6 +93,70 @@ public class BattleManager {
                 gameView.showBattleStatus(player, enemy, enemyName);
                 gameView.showAttackResult(enemyName, enemyCard.getCName(), enemyDamage);
             }
+
+            // 플레이어 사망 체크
+            if (player.getCurrentHealth() <= 0) {
+                gameView.showBattleLose();
+                return BattleResult.LOSE;
+            }
+        }
+
+        return BattleResult.LOSE;
+    }
+
+    // ============================================
+    // 캐시 전투 (적이 90% 확률로 도망)
+    // ============================================
+    public BattleResult startCacheBattle(Entity player, Entity enemy, String enemyName,
+                                         List<Card> playerCards, List<Item> playerItems,
+                                         Card enemyCard) {
+        gameView.showBattleStart(enemyName);
+
+        while (player.getCurrentHealth() > 0 && enemy.getCurrentHealth() > 0) {
+
+            // --- 플레이어 턴 ---
+            gameView.showBattleStatus(player, enemy, enemyName);
+            int choice = gameView.showPlayerMenu(playerCards.size(), playerItems.size());
+
+            switch (choice) {
+                case 1:
+                    int cardIdx = gameView.showCardList(playerCards);
+                    if (cardIdx <= 0) continue;
+                    Card selected = playerCards.get(cardIdx - 1);
+                    int damage = selected.use(player, enemy);
+                    gameView.showAttackResult("영균", selected.getCName(), damage);
+                    break;
+
+                case 2:
+                    int itemIdx = gameView.showItemList(playerItems);
+                    if (itemIdx <= 0) continue;
+                    Item item = playerItems.remove(itemIdx - 1);
+                    item.use(player);
+                    gameView.showItemUseResult(item.getIName());
+                    break;
+
+                case 3:
+                    gameView.showFlee();
+                    return BattleResult.FLEE;
+            }
+
+            // 적 사망 체크
+            if (enemy.getCurrentHealth() <= 0) {
+                gameView.showBattleStatus(player, enemy, enemyName);
+                gameView.showBattleWin(enemyName);
+                return BattleResult.WIN;
+            }
+
+            // --- 적 턴: 90% 확률로 도망 ---
+            if (Math.random() < 0.9) {
+                gameView.showBattleStatus(player, enemy, enemyName);
+                gameView.showEnemyFled(enemyName);
+                return BattleResult.ENEMY_FLED;
+            }
+
+            int enemyDamage = enemyCard.use(enemy, player);
+            gameView.showBattleStatus(player, enemy, enemyName);
+            gameView.showAttackResult(enemyName, enemyCard.getCName(), enemyDamage);
 
             // 플레이어 사망 체크
             if (player.getCurrentHealth() <= 0) {

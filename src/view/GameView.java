@@ -329,6 +329,13 @@ public class GameView {
         printSlow("도망쳤다!");
     }
 
+    /** 적이 도망 */
+    public void showEnemyFled(String enemyName) {
+        clearBelow();
+        printSlow(enemyName + "이(가) 도망쳤다!");
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+    }
+
     /** Scanner 방어 성공 */
     public void showScannerBlock(int useCount) {
         clearBelow();
