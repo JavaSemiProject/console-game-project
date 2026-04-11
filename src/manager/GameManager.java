@@ -94,7 +94,6 @@ public class GameManager {
         hasBracket = false;
         hyejinRoute = false;
         stageManager.buildFloorChain(8);
-        stageManager.placeEvents();
 
         if (createSave) {   // ← 이어하기 시엔 실행 안 됨
             Save newSave = saveManager.createNewSave(2);
@@ -128,6 +127,24 @@ public class GameManager {
     private void awardCard(String id, int pp, String name, String method, int power, String desc) {
         playerCards.add(Card.createAttackCard(id, pp, name, method, power, desc, null, null, 0));
         gameView.showAcquire(name);
+    }
+
+    /**
+     * 랜덤 NPC 조우 처리. 승리 시 회복, 패배 시 GAME_OVER 설정.
+     * @return 전투 결과
+     */
+    private BattleResult handleNpcEncounter(ExploreResult result) {
+        String npcId = result.getEventId();
+        NPC npc = stageManager.getNpcById(npcId);
+        if (npc == null) return BattleResult.WIN;
+
+        Card npcCard = createEnemyCard(npc.getNName(), npc.getPowerMax());
+        BattleResult br = battleManager.startBattle(
+                hero, npc, npc.getNName(), playerCards, playerItems, npcCard);
+
+        if (br == BattleResult.WIN) restAfterBattle();
+        else if (br == BattleResult.LOSE) state = GameState.GAME_OVER;
+        return br;
     }
 
     private void restAfterBattle() {
@@ -293,10 +310,33 @@ public class GameManager {
     private void playFloor2() {
         showDialogue("floor2", "story");
 
-        ExploreResult exploreResult2 = stageManager.exploreFloor(2, gameView);
-        model.Stage lastPos = exploreResult2 != null ? exploreResult2.getLastPos() : null;
+        model.Stage resumePos = null;
+        while (true) {
+            ExploreResult result = stageManager.exploreFloor(2, gameView, resumePos);
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
-        // TODO: 맵 셀 이벤트로 이동 (comment_branch, semicolon_find)
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+
+            String eid = result.getEventId();
+            if (EventManager.COMMENT_BRANCH.equals(eid)) {
+                showDialogue("floor2", "comment_branch");
+                eventManager.setCommentBranchDone(true);
+                result.getCurrentPos().consume();
+            } else if (EventManager.SEMICOLON_FIND.equals(eid)) {
+                showDialogue("floor2", "semicolon_find");
+                hasSemicolon = true;
+                gameView.showAcquire("; (세미콜론)");
+                result.getCurrentPos().consume();
+            }
+            resumePos = result.getCurrentPos();
+        }
+
+        model.Stage lastPos = resumePos;
 
         // 미주 보스전
         if (!bossBattleLoop(2, "floor2", "battle_boss_start", "battle_boss_win",
@@ -315,20 +355,34 @@ public class GameManager {
     private void playFloor3() {
         showDialogue("floor3", "story");
 
-        // 세미콜론 문
-        EventResult doorResult = eventManager.trigger(EventManager.SEMICOLON_DOOR);
-        if (doorResult == EventResult.ENDING_SHORTCUT) {
-            showDialogue("floor3", "semicolon_door_open");
-            triggerEnding("SHORTCUT");
-            return;
-        } else if (doorResult == EventResult.DOOR_LOCKED) {
-            showDialogue("floor3", "semicolon_door_locked");
+        model.Stage resumePos3 = null;
+        while (true) {
+            ExploreResult result = stageManager.exploreFloor(3, gameView, resumePos3);
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos3 = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+
+            String eid = result.getEventId();
+            if (EventManager.SEMICOLON_DOOR.equals(eid)) {
+                EventResult doorResult = eventManager.trigger(EventManager.SEMICOLON_DOOR);
+                if (doorResult == EventResult.ENDING_SHORTCUT) {
+                    showDialogue("floor3", "semicolon_door_open");
+                    triggerEnding("SHORTCUT");
+                    return;
+                } else if (doorResult == EventResult.DOOR_LOCKED) {
+                    showDialogue("floor3", "semicolon_door_locked");
+                }
+                result.getCurrentPos().consume();
+            }
+            resumePos3 = result.getCurrentPos();
         }
 
-        ExploreResult exploreResult3 = stageManager.exploreFloor(3, gameView);
-        model.Stage lastPos = exploreResult3 != null ? exploreResult3.getLastPos() : null;
-
-        // TODO: 맵 셀 이벤트로 이동 (interpreter_robot)
+        model.Stage lastPos = resumePos3;
 
         // 솔민 보스전
         if (!bossBattleLoop(3, "floor3", "battle_boss_start", "battle_boss_win",
@@ -352,7 +406,13 @@ public class GameManager {
             ExploreResult result = stageManager.exploreFloor(4, gameView, resumePos);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
-            // 이벤트 처리
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+
             String eid = result.getEventId();
             if (EventManager.SUSPECT_SUNHYUK.equals(eid)) {
                 EventResult suspectResult = eventManager.trigger(eid);
@@ -372,8 +432,8 @@ public class GameManager {
                     }
                     showDialogue("floor4", "betrayal_win");
                 }
+                result.getCurrentPos().consume();
             }
-            result.getCurrentPos().setEventId(null);
             resumePos = result.getCurrentPos();
         }
 
@@ -396,8 +456,21 @@ public class GameManager {
     private void playFloor5() {
         showDialogue("floor5", "story");
 
-        ExploreResult exploreResult5 = stageManager.exploreFloor(5, gameView);
-        model.Stage lastPos = exploreResult5 != null ? exploreResult5.getLastPos() : null;
+        model.Stage resumePos5 = null;
+        while (true) {
+            ExploreResult result = stageManager.exploreFloor(5, gameView, resumePos5);
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos5 = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+            resumePos5 = result.getCurrentPos();
+        }
+
+        model.Stage lastPos = resumePos5;
 
         // 수지 보스전
         if (!bossBattleLoop(5, "floor5", "battle_boss_start", "battle_boss_win",
@@ -416,10 +489,27 @@ public class GameManager {
     private void playFloor6() {
         showDialogue("floor6", "story");
 
-        ExploreResult exploreResult6 = stageManager.exploreFloor(6, gameView);
-        model.Stage lastPos = exploreResult6 != null ? exploreResult6.getLastPos() : null;
+        model.Stage resumePos6 = null;
+        while (true) {
+            ExploreResult result = stageManager.exploreFloor(6, gameView, resumePos6);
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
-        // TODO: 맵 셀 이벤트로 이동 (cache_battle)
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos6 = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+
+            String eid = result.getEventId();
+            if (EventManager.CACHE_BATTLE.equals(eid)) {
+                // TODO: 캐시 전투 처리
+                result.getCurrentPos().consume();
+            }
+            resumePos6 = result.getCurrentPos();
+        }
+
+        model.Stage lastPos = resumePos6;
 
         // 봉민 보스전
         if (!bossBattleLoop(6, "floor6", "battle_boss_start", "battle_boss_win",
@@ -443,17 +533,23 @@ public class GameManager {
             ExploreResult result = stageManager.exploreFloor(7, gameView, resumePos);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
 
-            // 이벤트 처리
+            if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
+                BattleResult br = handleNpcEncounter(result);
+                if (br == BattleResult.LOSE) return;
+                resumePos = (br == BattleResult.FLEE) ? result.getLastPos() : result.getCurrentPos();
+                continue;
+            }
+
             String eid = result.getEventId();
             if (EventManager.HEAP_ENTRY.equals(eid)) {
                 EventResult heapResult = eventManager.trigger(eid);
                 if (heapResult == EventResult.SHOW_DIALOGUE) {
                     showDialogue("floor7", "heap_entry");
+                    result.getCurrentPos().consume();
                     state = GameState.HIDDEN_MAP;
                     return;
                 }
             }
-            result.getCurrentPos().setEventId(null);
             resumePos = result.getCurrentPos();
         }
 
