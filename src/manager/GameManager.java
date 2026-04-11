@@ -1,6 +1,7 @@
 package manager;
 
 import dao.CardDAO;
+import dao.CollectionDAO;
 import dao.ItemDAO;
 import dao.SaveDAO;
 import dao.StageDAO;
@@ -88,9 +89,6 @@ public class GameManager {
                 "사용자 입력을 읽어들이는 기본 도구.", null, null, 0));
 
         playerItems.clear();
-        for (int i = 0; i < 3; i++) {
-            playerItems.add(createPotion());
-        }
 
         hasSemicolon = false;
         hasBracket = false;
@@ -112,23 +110,21 @@ public class GameManager {
     // ============================================
     // 헬퍼: 오브젝트 생성
     // ============================================
-    private NPC createBoss(String id, String name, int hp, int atkMin, int atkMax) {
-        return new NPC(id, name, name + " 보스", hp, true, atkMin, atkMax, 1, null);
+    private NPC createBoss(String id, String name, int hp, int atkMin, int atkMax, int pp) {
+        return new NPC(id, name, name + " 보스", hp, true, atkMin, atkMax, pp, null);
     }
 
-    private Card createEnemyCard(String name, int power) {
+    private Card createEnemyCard(String name) {
         return Card.createAttackCard("E_" + name, 0, name + "의 공격",
-                "ENEMY_ATK", power, name + "의 공격", null, null, 0);
+                "ENEMY_ATK", 0, name + "의 공격", null, null, 0);
     }
 
-    private Item createPotion() {
-        return Item.createItem("I001", "포션", 30, 0, 0,
-                "HP를 30 회복하는 기본 포션.", null, null, 0, 0);
-    }
-
-    private void awardCard(String id, int pp, String name, String method, int power, String desc) {
-        playerCards.add(Card.createAttackCard(id, pp, name, method, power, desc, null, null, 0));
-        gameView.showAcquire(name);
+    private void awardCardFromDB(String cardId) {
+        Card card = new CardDAO().findById(cardId);
+        if (card != null) {
+            playerCards.add(card);
+            gameView.showAcquire(card.getCName());
+        }
     }
 
     /**
@@ -140,7 +136,7 @@ public class GameManager {
         NPC npc = stageManager.getNpcById(npcId);
         if (npc == null) return BattleResult.WIN;
 
-        Card npcCard = createEnemyCard(npc.getNName(), npc.getPowerMax());
+        Card npcCard = createEnemyCard(npc.getNName());
         BattleResult br = battleManager.startBattle(
                 hero, npc, npc.getNName(), playerCards, playerItems, npcCard);
 
@@ -162,7 +158,6 @@ public class GameManager {
 
     private void restAfterBattle() {
         hero.heal(20);
-        playerItems.add(createPotion());
     }
 
     /**
@@ -170,13 +165,13 @@ public class GameManager {
      * @return true=승리, false=패배(GAME_OVER 설정됨)
      */
     private boolean bossBattleLoop(int floorLevel, String prefix, String startTag, String winTag,
-                                   String bossId, String bossName, int hp, int atkMin, int atkMax, int cardPower,
-                                   model.Stage lastPos) {
+                                   String bossId, String bossName, int hp, int atkMin, int atkMax,
+                                   int bossPp, model.Stage lastPos) {
 
         while (true) {
             showDialogue(prefix, startTag);
-            NPC boss = createBoss(bossId, bossName, hp, atkMin, atkMax);
-            Card bossCard = createEnemyCard(bossName, cardPower);
+            NPC boss = createBoss(bossId, bossName, hp, atkMin, atkMax, bossPp);
+            Card bossCard = createEnemyCard(bossName);
             BattleResult result = battleManager.startBattle(
                     hero, boss, bossName, playerCards, playerItems, bossCard);
 
@@ -291,8 +286,8 @@ public class GameManager {
         // 혜진 전투
         NPC hyejin = new NPC("N001", "혜진",
                 "같이 코드 세계에 갇힌 동료. Math.random 카드를 가지고 있다.",
-                50, false, 5, 8, 1, "C002");
-        Card hyejinCard = createEnemyCard("혜진", 12);
+                50, false, 5, 8, 0, "C002"); // 혜진: 진=받침ㄴ → pp=0
+        Card hyejinCard = createEnemyCard("혜진");
 
         BattleResult result = battleManager.startHyejinBattle(
                 hero, hyejin, "혜진", playerCards, playerItems, hyejinCard);
@@ -310,8 +305,7 @@ public class GameManager {
         // 승리 또는 Scanner 흡수: 혜진 사라짐 + Math.random 카드 획득
         showDialogue("floor1", "hyejin_disappear");
         playerCards.removeIf(c -> "C001".equals(c.getCId())); // Scanner 비활성화
-        awardCard("C002", 0, "Math.random", "RANDOM_ATK", 25,
-                "랜덤 주사위를 굴려 공격한다.");
+        awardCardFromDB("c2");
         hero.heal(20);
 
         state = GameState.FLOOR_2;
@@ -356,12 +350,11 @@ public class GameManager {
 
         model.Stage lastPos = resumePos;
 
-        // 미주 보스전
+        // 미주 보스전 (미주: 주=모음 → pp=1)
         if (!bossBattleLoop(2, "floor2", "battle_boss_start", "battle_boss_win",
-                "B002", "미주", 70, 8, 12, 15, lastPos)) return;
+                "B002", "미주", 70, 8, 12, 1, lastPos)) return;
 
-        awardCard("C004", 0, "Arrays.sort", "SORT_SLASH", 30,
-                "배열을 정렬하며 적을 베어낸다.");
+        awardCardFromDB("c4");
         restAfterBattle();
 
         state = GameState.FLOOR_3;
@@ -402,12 +395,11 @@ public class GameManager {
 
         model.Stage lastPos = resumePos3;
 
-        // 솔민 보스전
+        // 솔민 보스전 (솔민: 민=받침ㄴ → pp=0)
         if (!bossBattleLoop(3, "floor3", "battle_boss_start", "battle_boss_win",
-                "B003", "솔민", 85, 10, 14, 18, lastPos)) return;
+                "B003", "솔민", 85, 10, 14, 0, lastPos)) return;
 
-        awardCard("C005", 0, "String.split", "SPLIT_CUT", 20,
-                "문자열을 분할하며 적을 가른다.");
+        awardCardFromDB("c5");
         restAfterBattle();
 
         state = GameState.FLOOR_4;
@@ -439,7 +431,7 @@ public class GameManager {
 
                     NPC sunhyuk = new NPC("N002", "선혁",
                             "같이 코드 세계에 갇힌 동료.", 60, false, 8, 12, 0, null);
-                    Card sunhyukCard = createEnemyCard("선혁", 14);
+                    Card sunhyukCard = createEnemyCard("선혁");
                     BattleResult pvpResult = battleManager.startBattle(
                             hero, sunhyuk, "선혁", playerCards, playerItems, sunhyukCard);
 
@@ -457,12 +449,11 @@ public class GameManager {
 
         model.Stage lastPos = resumePos;
 
-        // 제석 보스전
+        // 제석 보스전 (제석: 석=받침ㄱ → pp=0)
         if (!bossBattleLoop(4, "floor4", "battle_boss_start", "battle_boss_win",
-                "B004", "제석", 100, 12, 16, 20, lastPos)) return;
+                "B004", "제석", 100, 12, 16, 0, lastPos)) return;
 
-        awardCard("C006", 1, "try-catch", "CATCH_HEAL", 35,
-                "예외를 잡아 안정을 되찾는다.");
+        awardCardFromDB("c6");
         restAfterBattle();
 
         state = GameState.FLOOR_5;
@@ -490,12 +481,11 @@ public class GameManager {
 
         model.Stage lastPos = resumePos5;
 
-        // 수지 보스전
+        // 수지 보스전 (수지: 지=모음 → pp=1)
         if (!bossBattleLoop(5, "floor5", "battle_boss_start", "battle_boss_win",
-                "B005", "수지", 110, 14, 18, 22, lastPos)) return;
+                "B005", "수지", 110, 14, 18, 1, lastPos)) return;
 
-        awardCard("C009", 1, "StringBuilder", "BUILD_STRIKE", 35,
-                "문자열을 조합해 강력한 일격을 날린다.");
+        awardCardFromDB("c7");
         restAfterBattle();
 
         state = GameState.FLOOR_6;
@@ -529,12 +519,11 @@ public class GameManager {
 
         model.Stage lastPos = resumePos6;
 
-        // 봉민 보스전
+        // 봉민 보스전 (봉민: 민=받침ㄴ → pp=0)
         if (!bossBattleLoop(6, "floor6", "battle_boss_start", "battle_boss_win",
-                "B006", "봉민", 130, 16, 20, 25, lastPos)) return;
+                "B006", "봉민", 130, 16, 20, 0, lastPos)) return;
 
-        awardCard("C007", 0, "Collections", "COLLECTION_POWER", 40,
-                "컬렉션 프레임워크의 강력한 힘.");
+        awardCardFromDB("c8");
         restAfterBattle();
 
         state = GameState.FLOOR_7;
@@ -586,15 +575,14 @@ public class GameManager {
 
         while (true) {
             showDialogue("floor7", startTag);
-            NPC minjung = createBoss("B007", "민중", 150, 18, 24);
-            Card minjungCard = createEnemyCard("민중", 28);
+            NPC minjung = createBoss("B007", "민중", 150, 18, 24, 0); // 민중: 중=받침ㄱ → pp=0
+            Card minjungCard = createEnemyCard("민중");
             BattleResult result = battleManager.startBattle(
                     hero, minjung, "민중", playerCards, playerItems, minjungCard);
 
             if (result == BattleResult.WIN) {
                 showDialogue("floor7", winTag);
-                awardCard("C010", 0, "instanceof", "TYPE_CHECK", 45,
-                        "적의 타입을 간파하여 약점을 찾아낸다.");
+                awardCardFromDB("c9");
                 hero.heal(30);
                 return true;
             }
@@ -626,7 +614,7 @@ public class GameManager {
             NPC gc = new NPC("M_GC", "GC",
                     "가비지 컬렉터. 더 이상 참조되지 않는 것들을 수거한다.",
                     80, false, 14, 20, 1, null);
-            Card gcCard = createEnemyCard("GC", 18);
+            Card gcCard = createEnemyCard("GC");
             BattleResult gcResult = battleManager.startBattle(
                     hero, gc, "GC", playerCards, playerItems, gcCard);
 
@@ -698,21 +686,25 @@ public class GameManager {
 
     private void playEnding() {
         String endingName;
+        String endingEId;
         switch (endingType) {
-            case "FALL":       endingName = "넘어짐";     break;
-            case "SHORTCUT":   endingName = "최단거리";   break;
-            case "BETRAYAL":   endingName = "뒷통수";     break;
-            case "GC":         endingName = "GC";         break;
-            case "DEFEAT":     endingName = "패배";       break;
-            case "HYEJIN":     endingName = "혜진";       break;
-            case "NO_HYEJIN":  endingName = "혜진 X";     break;
-            default:           endingName = endingType;   break;
+            case "FALL":       endingName = "넘어짐";   endingEId = "e3"; break;
+            case "SHORTCUT":   endingName = "최단거리"; endingEId = "e8"; break;
+            case "BETRAYAL":   endingName = "뒷통수";   endingEId = "e4"; break;
+            case "GC":         endingName = "GC";       endingEId = "e6"; break;
+            case "DEFEAT":     endingName = "패배";     endingEId = "e5"; break;
+            case "HYEJIN":     endingName = "혜진";     endingEId = "e7"; break;
+            case "NO_HYEJIN":  endingName = "혜진 X";   endingEId = "e8"; break;
+            default:           endingName = endingType; endingEId = null; break;
         }
         gameView.showEndingTitle(endingName);
-
-        // TODO: ending 테이블에서 엔딩 메시지 조회 후 출력
-        // TODO: collectionManager.unlockEnding(endingId, currentTry);
         gameView.waitForEnter();
+
+        // 엔딩 DB 저장
+        int tryNum = stageManager.getCurrentTryNum();
+        if (endingEId != null && tryNum != -1) {
+            new CollectionDAO().saveEnding(endingEId, tryNum);
+        }
 
         // 승리 엔딩(SHORTCUT, HYEJIN, NO_HYEJIN)에서 엔딩 크레딧 출력
         if ("SHORTCUT".equals(endingType) || "HYEJIN".equals(endingType)
@@ -720,7 +712,7 @@ public class GameManager {
             showDialogue("system", "ending_credit");
         }
 
-        state = GameState.GAME_OVER;
+        state = GameState.MAIN_MENU;
     }
 
     // ============================================
