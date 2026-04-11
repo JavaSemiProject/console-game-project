@@ -24,8 +24,8 @@ public class NPCDAO {
             rs.getString("n_id"),
             rs.getString("n_name"),
             rs.getString("n_desc"),
-            rs.getInt("health"),
-            rs.getBoolean("is_boss"),
+            rs.getInt("hp"),
+            rs.getInt("is_boss") ==1,
             rs.getInt("power_min"),
             rs.getInt("power_max"),
             rs.getInt("pp"),
@@ -50,7 +50,7 @@ public class NPCDAO {
       if (rs.next()) {
         return new Hero(
             rs.getString("n_id"),
-            rs.getInt("health"),
+            rs.getInt("hp"),
             rs.getInt("power_min"),
             rs.getInt("power_max"),
             rs.getInt("pp"),

@@ -414,11 +414,11 @@ public class GameView {
         switch (s.getS_type()) {
             case "start":  return "S";
             case "finish": return "F";
-            case "n":      return "N";  // 몬스터
-            case "i":      return "I";  // 아이템
-            case "w":      return ".";  // 벽
-            case "v":      return "■";  // 빈 칸
-            case "e":      return "E";  // 이벤트
+            case "npc_i":  return "N";  // 아이템
+            case "work":   return ".";  // 이동칸
+            case "void":   return "■"; //장애물
+            case "event":
+            case "event_c3":  return "E";  // 이벤트
             default:       return "?";
         }
     }

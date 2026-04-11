@@ -61,18 +61,14 @@ public class StageDAO {
     return stages;
   }
 
-  public List<Stage> findByFloorLevel(int fLevel) {
-    List<Stage> stages = new ArrayList<>();
-    String sql = "SELECT * FROM stage WHERE f_level = ? ORDER BY `s_row`, `s_column`";
-
+  public Stage findStartByFloor(int floorLevel) {
+    String sql = "SELECT * FROM stage WHERE f_level = ? AND s_type = 'start' LIMIT 1";
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-      pstmt.setInt(1, fLevel);
+      pstmt.setInt(1, floorLevel);
       ResultSet rs = pstmt.executeQuery();
-
-      while (rs.next()) {
-        stages.add(new Stage(
+      if (rs.next()) {
+        return new Stage(
             rs.getString("s_id"),
             rs.getString("s_id"),
             rs.getInt("s_row"),
@@ -80,11 +76,13 @@ public class StageDAO {
             rs.getInt("f_level"),
             rs.getString("s_type"),
             rs.getDouble("s_prob")
-        ));
+        );
       }
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return stages;
+    return null;
   }
+
+
 }

@@ -209,7 +209,7 @@ public class StageManager {
 
       Stage next = getStageAt(nextRow, String.valueOf(nextCol), floor);
       if (next != null) {
-        if ("v".equals(next.getS_type())) {  // v만 장애물로 처리
+        if ("void".equals(next.getS_type())) {  // v만 장애물로 처리
           gameView.showMapAlert("장애물에 막혔습니다.");
         } else {
           // w(빈칸), N, I, E, F 등은 모두 통과
@@ -229,9 +229,9 @@ public class StageManager {
         // 다음 층 start 자동 저장
         Stage nextFloorStart = findStageStart(floorLevel + 1);
         if (nextFloorStart != null && currentTryNum != -1) {
-          boolean saved = saveDAO.updateStage(nextFloorStart.getStageName(), currentTryNum);
+          boolean saved = saveDAO.updateStage(nextFloorStart.getStageId(), currentTryNum); // ✅
           gameView.showMessage(saved
-              ? "[AutoSave] ✔ 저장 완료: " + nextFloorStart.getStageName()
+              ? "[AutoSave] ✔ 저장 완료: " + nextFloorStart.getStageId()
               : "[AutoSave] ✘ 저장 실패");
         }
 
@@ -258,9 +258,9 @@ public class StageManager {
       return;
     }
 
-    boolean saved = saveDAO.updateStage(stage.getStageName(), currentTryNum);
+    boolean saved = saveDAO.updateStage(stage.getStageId(), currentTryNum); // ✅
     gameView.showMessage(saved
-        ? "[AutoSave] ✔ 저장 완료: " + stage.getStageName()
+        ? "[AutoSave] ✔ 저장 완료: " + stage.getStageId()
         : "[AutoSave] ✘ 저장 실패");
   }
 

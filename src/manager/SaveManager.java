@@ -27,34 +27,28 @@ public class SaveManager {
    * - start 스테이지 찾아서 DB INSERT + s_id UPDATE
    */
   public Save createNewSave(int floorLevel) {
-    Stage startStage = findStartStage(floorLevel);
-    if (startStage == null) {
-      System.err.println("[SaveManager] " + floorLevel + "층의 start 스테이지가 없습니다.");
-      return null;
-    }
+    // ✅ stageDAO 대신 stageManager.findStageStart() 사용
+    Stage startStage = stageManager.findStageStart(floorLevel);
+    if (startStage == null) return null;
 
-    // 1. INSERT → tryNum 발급
-    int tryNum = saveDAO.createSave();
-    if (tryNum == -1) {
-      System.err.println("[SaveManager] 세이브 생성 실패.");
-      return null;
-    }
+    int tryNum = saveDAO.createSave(startStage.getStageName());
+    if (tryNum == -1) return null;
 
-    // 2. s_id UPDATE
-    boolean saved = saveDAO.updateStage(startStage.getStageName(), tryNum);
     System.out.println("[SaveManager] 새 게임 저장: "
         + startStage.getStageName()
         + " / tryNum=" + tryNum
-        + " / saved=" + saved);
+        + " / saved=true");
 
     return new Save(
-        startStage.getStageName(),
-        tryNum,
-        new Timestamp(System.currentTimeMillis()),
-        new ArrayList<>(),
-        new ArrayList<>()
+        "player1",                                 // 1. String t_id
+        startStage.getStageName(),                 // 2. String lId  ✅ 순서 교체
+        tryNum,                                    // 3. int tryNum  ✅ 순서 교체
+        new Timestamp(System.currentTimeMillis()), // 4. Timestamp t_time
+        new ArrayList<>(),                         // 5. List<Card>
+        new ArrayList<>()                          // 6. List<Item>
     );
   }
+
 
   /**
    * 이어하기: 가장 최근 세이브 불러오기
@@ -74,11 +68,12 @@ public class SaveManager {
   /**
    * 층에서 s_type = 'start' 인 스테이지 찾기
    */
-  private Stage findStartStage(int floorLevel) {
-    List<Stage> stages = stageDAO.findByFloorLevel(floorLevel);
-    return stages.stream()
-        .filter(s -> "start".equals(s.getS_type()))
-        .findFirst()
-        .orElse(null);
+
+  public boolean resetAllSaves() {
+    boolean deleted = saveDAO.deleteAllGameData();  // 또는 deleteAllSaves()
+    if (deleted) {
+      System.out.println("[SaveManager] 모든 세이브 데이터 초기화 완료");
+    }
+    return deleted;
   }
 }

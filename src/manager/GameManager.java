@@ -18,6 +18,7 @@ public class GameManager {
         MAIN_MENU,
         PROLOGUE,
         TUTORIAL,       // 1층 설산 (혜진, 선혁)
+        EXPLORE_FLOOR,
         FLOOR_2,        // 2층 숲   (미주)
         FLOOR_3,        // 3층 들판 (솔민)
         FLOOR_4,        // 4층 사막 (제석)
@@ -51,6 +52,7 @@ public class GameManager {
     private CollectionManager collectionManager;
     private StageManager stageManager;
     private SaveManager saveManager;
+    private MainMenuView mainMenuView;
     // 뷰
     private GameView gameView;
     private MainMenuView menuView;
@@ -88,20 +90,18 @@ public class GameManager {
         for (int i = 0; i < 3; i++) {
             playerItems.add(createPotion());
         }
-
+        saveManager.resetAllSaves();
         hasSemicolon = false;
         hasBracket = false;
         hyejinRoute = false;
         stageManager.buildFloorChain(8);
 
         if (createSave) {   // ← 이어하기 시엔 실행 안 됨
-            Save newSave = saveManager.createNewSave(2);
+            saveManager.resetAllSaves();
+            Save newSave = saveManager.createNewSave(1); // ✅ 1층 시작으로 통일
             if (newSave != null) {
                 stageManager.setCurrentTryNum(newSave.getTryNum());
-                System.out.println("[GameManager] tryNum 설정: " + newSave.getTryNum());
-                System.out.println("[GameManager] 새 게임 세이브 생성: " + newSave.getSaveStatus());
-            } else {
-                System.out.println("[GameManager] 세이브 생성 실패 - tryNum 미설정");
+                System.out.println("[New Game] 시작 위치: 1_a1 (tryNum=" + newSave.getTryNum() + ")");
             }
         }
     }
@@ -203,15 +203,27 @@ public class GameManager {
                 break;
             case 2:
                 /* TODO: SaveManager.load() */
-                // 이어하기: loadLatestSave()를 먼저 호출한 뒤 initGameData(false)로 세이브 생성 억제
                 Save loaded = saveManager.loadLatestSave();
-                if (loaded != null) {
-                    initGameData(false);  // 세이브 생성 없이 초기화만
+                if (loaded != null && loaded.getLId() != null) {
+                    System.out.println("[이어하기] Try #" + loaded.getTryNum()
+                        + " | Stage:" + loaded.getLId()
+                        + " | " + loaded.getT_time());
+
+                    // ✅ initGameData 호출 없이 필요한 것만 초기화
+                    hero = new Hero("H001", 100, 5, 10, 0, "C001");
+                    playerCards.clear();
+                    playerCards.add(Card.createAttackCard("C001", 1, "Scanner", "SCAN_INPUT", 10,
+                        "사용자 입력을 읽어들이는 기본 도구.", null, null, 0));
+                    playerItems.clear();
+                    for (int i = 0; i < 3; i++) playerItems.add(createPotion());
+                    stageManager.buildFloorChain(8);
+
+                    // ✅ tryNum 설정 (DB 삭제 없이)
                     stageManager.setCurrentTryNum(loaded.getTryNum());
-                    GameState savedState = getStateFromSaveId(loaded.getLId());
-                    gameView.showMessage("[이어하기] " + loaded.getSaveStatus());
-                    gameView.waitForEnter();
-                    state = savedState;
+
+                    // ✅ 해당 층 GameState로 전환 (exploreFloor 직접 호출 X)
+                    state = getStateFromSaveId(loaded.getLId());
+
                 } else {
                     menuView.showNoSaveData();
                 }
@@ -220,7 +232,11 @@ public class GameManager {
             case 4: state = GameState.GAME_OVER; break;
         }
     }
-
+    // Stage ID에서 층 번호 추출 ("2_a1" → 2)
+    private int extractFloorFromStage(String stageId) {
+        if (stageId == null || stageId.isEmpty()) return 1;
+        return Integer.parseInt(stageId.substring(0, 1));
+    }
     // s_id로 해당 층 GameState 반환
     private GameState getStateFromSaveId(String sId) {
         if (sId == null) return GameState.PROLOGUE;

@@ -31,7 +31,7 @@ public class Stage {
   public Double getS_prob() {return s_prob;}
   @Override
   public String toString(){
-    return String.format("Stage{id=%d, name = '%s'}", stageId, stageName);
+    return String.format("Stage{id=%s, name='%s'}", stageId, stageName);
   }
 
 }
