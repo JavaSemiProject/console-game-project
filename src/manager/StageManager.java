@@ -1,8 +1,12 @@
 package manager;
 
+import dao.SaveDAO;
+import dao.StageDAO;
 import model.Floor;
+import model.NPC;
 import model.Stage;
 import view.GameView;
+import dao.NPCDAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,9 +14,40 @@ import java.util.List;
 public class StageManager {
   private List<Stage> stageList = new ArrayList<>();
   private Floor currentFloor;
+  private NPCDAO npcDAO = new NPCDAO();
+
+  // StageDAO에서 DB 읽어오기
+  public StageManager() {
+    StageDAO stageDAO = new StageDAO();
+    this.stageList = new ArrayList<>(stageDAO.findAll());
+  }
+
+
+  private int currentTryNum = -1;
+  private SaveDAO saveDAO = new SaveDAO();
+
+  // 층별 보스 n_id 매핑
+  private String getBossIdForFloor(int floorLevel) {
+    switch (floorLevel) {
+      case 2: return "n4";  // 미주
+      case 3: return "n5";  // 솔민
+      case 4: return "n6";  // 제석
+      case 5: return "n7";  // 수지
+      case 6: return "n8";  // 봉민
+      case 7: return "n9";  // 민중
+      default: return null;
+    }
+  }
+
+  public NPC getBossForFloor(int floorLevel) {
+    String bossId = getBossIdForFloor(floorLevel);
+    if (bossId == null) return null;
+    return npcDAO.findById(bossId);
+  }
+
 
   // 테스트 전용 -DB 대체로 임시 사용 -> DB 연동되면 삭제 OR 주석
-  public void generateStages() {
+  /*public void generateStages() {
     String[] columns = {"a", "b", "c", "d", "e"};
     int idCounter = 1;
 
@@ -27,7 +62,7 @@ public class StageManager {
     }
     System.out.println("시스템: 200개의 스테이지 객체가 생성되었습니다.");
   }
-
+*/
 /*
   // 테스트 전용-2
   public void printFullMap() {
@@ -69,6 +104,11 @@ public class StageManager {
     }
   }
 
+  // ✅ GameManager에서 tryNum 주입
+  public void setCurrentTryNum(int tryNum) {
+    this.currentTryNum = tryNum;
+  }
+
 
   // 특정 층 탐색
   private Floor findFloor(int level) {
@@ -108,19 +148,49 @@ public class StageManager {
         .orElse(null);
   }
 
+  // 층에서 `start` 타입 스테이지(= 자동 세이브 지점, 보통 a1) 찾기
+  public Stage findStageStart(int floorLevel) {
+    Floor floor = findFloor(floorLevel);
+    if (floor == null) return null;
+
+    return floor.getStages().stream()
+        .filter(s -> "start".equals(s.getS_type()) && s.getFlevel() == floorLevel)
+        .findFirst()
+        .orElse(null);
+  }
+
+  public static class FloorResult {
+    public final Stage prevPos;
+    public final NPC boss;  // finish 도달 시 해당 층 보스
+
+    public FloorResult(Stage prevPos, NPC boss) {
+      this.prevPos = prevPos;
+      this.boss = boss;
+    }
+  }
   // ============================================
   // 맵 탐색 루프 (도착점 a_5 도달 시 종료)
   // startPos가 null이면 e_1에서 시작
   // 반환값: 출구 도달 직전 위치 (도망 복귀용)
   // ============================================
-  public Stage exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+
+  public FloorResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
     Floor floor = findFloor(floorLevel);
     if (floor == null) return null;
 
-    Stage currentPos = (startPos != null) ? startPos : getStageAt(1, "e", floor);
+    Stage currentPos;
+    if (startPos != null) {
+      currentPos = startPos;
+    } else {
+      currentPos = floor.getStages().stream()
+          .filter(s -> "start".equals(s.getS_type()))
+          .findFirst()
+          .orElse(getStageAt(1, "e", floor));
+    }
     if (currentPos == null) return null;
 
     Stage prevPos = currentPos;
+    autoSaveIfStart(currentPos, gameView);
 
     while (true) {
       gameView.showMap(floor, currentPos);
@@ -130,40 +200,70 @@ public class StageManager {
       char nextCol = currentPos.getColumn().charAt(0);
 
       switch (input) {
-        case "w": nextCol--; break;
-        case "s": nextCol++; break;
-        case "a": nextRow--; break;
-        case "d": nextRow++; break;
+        case "w": nextRow--; break;
+        case "s": nextRow++; break;
+        case "a": nextCol--; break;
+        case "d": nextCol++; break;
         default: continue;
       }
 
-      if (nextCol >= 'a' && nextCol <= 'e' && nextRow >= 1 && nextRow <= 5) {
-        Stage next = getStageAt(nextRow, String.valueOf(nextCol), floor);
-        if (next != null) {
+      Stage next = getStageAt(nextRow, String.valueOf(nextCol), floor);
+      if (next != null) {
+        if ("v".equals(next.getS_type())) {  // v만 장애물로 처리
+          gameView.showMapAlert("장애물에 막혔습니다.");
+        } else {
+          // w(빈칸), N, I, E, F 등은 모두 통과
           prevPos = currentPos;
           currentPos = next;
+          autoSaveIfStart(currentPos, gameView);
         }
       } else {
-        gameView.showMapAlert("더 이상 갈 수 없습니다.");
+        gameView.showMapAlert("더 이상 갈 수 없습니다.");  // 맵 밖
       }
 
-      // 도착점 도달
-      if (currentPos.getColumn().equals("a") && currentPos.getRow() == 5) {
+      // finish 도달 시 DB에서 보스 조회 후 반환
+      if ("finish".equals(currentPos.getS_type())) {
         gameView.showMessage("\n>> 출구를 발견했다!");
         gameView.waitForEnter();
-        return prevPos;
+
+        // 다음 층 start 자동 저장
+        Stage nextFloorStart = findStageStart(floorLevel + 1);
+        if (nextFloorStart != null && currentTryNum != -1) {
+          boolean saved = saveDAO.updateStage(nextFloorStart.getStageName(), currentTryNum);
+          gameView.showMessage(saved
+              ? "[AutoSave] ✔ 저장 완료: " + nextFloorStart.getStageName()
+              : "[AutoSave] ✘ 저장 실패");
+        }
+
+        // DB에서 해당 층 보스 조회
+        NPC boss = getBossForFloor(floorLevel);
+        return new FloorResult(prevPos, boss);
       }
     }
   }
 
-  /** 기본 시작 위치(e_1)로 탐색 */
-  public Stage exploreFloor(int floorLevel, GameView gameView) {
+  // 오버로드
+  public FloorResult exploreFloor(int floorLevel, GameView gameView) {
     return exploreFloor(floorLevel, gameView, null);
   }
 
   public Floor getFloor(int level) {
     return findFloor(level);
   }
+
+  private void autoSaveIfStart(Stage stage, GameView gameView) {
+    if (!"start".equals(stage.getS_type())) return;
+    if (currentTryNum == -1) {
+      System.out.println("[AutoSave] tryNum 없음 - 저장 스킵");
+      return;
+    }
+
+    boolean saved = saveDAO.updateStage(stage.getStageName(), currentTryNum);
+    gameView.showMessage(saved
+        ? "[AutoSave] ✔ 저장 완료: " + stage.getStageName()
+        : "[AutoSave] ✘ 저장 실패");
+  }
+
 /*
   // 스테이지 추가
   public void addStage(Stage stage) {
@@ -175,7 +275,7 @@ public class StageManager {
 
 */
 
-
+/*
   // ==========================================
 // [테스트 개발 전용] 화면 인게임 루프
 // ==========================================
@@ -215,7 +315,7 @@ public class StageManager {
         System.out.println("             ║");
       }
 */
-      // [하단 UI]
+ /*     // [하단 UI]
       System.out.println("╠══════════════════════════════════════╣");
       System.out.println(" 조작: w(상) a(좌) s(하) d(우) + Enter ");
 
@@ -286,15 +386,14 @@ public class StageManager {
       }
     }
   }
-
-
+  */
 
   //테스트용 StageManager 메인
   public static void main(String[] args) {
     StageManager manager = new StageManager();
 
     // 1. 스테이지 데이터 생성 (DB 역할 대체)
-    manager.generateStages();
+    //manager.generateStages();
 
     // 2. 8층 구조 생성 및 데이터 배분
     manager.buildFloorChain(8);
@@ -303,6 +402,6 @@ public class StageManager {
     manager.printFullMap();
 */
     // 3. 테스트용 인게임 화면 실행!
-    manager.testGameLoop();
+   // manager.testGameLoop();
   }
 }

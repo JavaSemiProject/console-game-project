@@ -331,8 +331,9 @@ public class GameView {
     // ============================================
 
     /** 5x5 그리드 맵 출력 (현재 위치 표시) */
+
     public void showMap(Floor floor, Stage currentPos) {
-        clearScreen();
+       /* clearScreen();
 
         System.out.println(floor.getFloorLevel() + "층 - 현재 위치: "
                 + currentPos.getColumn() + "_" + currentPos.getRow());
@@ -358,7 +359,68 @@ public class GameView {
         }
 
         System.out.println();
+        System.out.println("이동: w(상) a(좌) s(하) d(우)");*/
+
+        clearScreen();
+        System.out.println(floor.getFloorLevel() + "층 - 현재 위치: "
+            + currentPos.getColumn() + "_" + currentPos.getRow());
+        System.out.println();
+
+// 범례
+        System.out.println("  @ 현재위치  N 몬스터  I 아이템  E 이벤트  F 출구  S 시작");
+        System.out.println();
+
+// 열 헤더 (a~e)
+        System.out.print("      ");
+        char[] colLabels = {'a', 'b', 'c', 'd', 'e'};
+        for (char c : colLabels) {
+            System.out.print("  " + c + "  ");
+        }
+        System.out.println();
+
+// 행 (1~5)
+        for (int r = 1; r <= 5; r++) {
+            final int currentRow = r;
+            System.out.print("  " + r + "  ");
+            for (char c : colLabels) {
+                final String currentCol = String.valueOf(c);
+                boolean isHere = currentPos.getRow() == currentRow
+                    && currentPos.getColumn().equals(currentCol);
+
+                if (isHere) {
+                    System.out.print("[ @ ]");
+                } else {
+                    Stage s = floor.getStages().stream()
+                        .filter(st -> st.getRow() == currentRow
+                            && st.getColumn().equals(currentCol))
+                        .findFirst()
+                        .orElse(null);
+
+                    String symbol = getSymbol(s);
+                    System.out.print("[ " + symbol + " ]");
+                }
+            }
+            System.out.println();
+        }
+
+        System.out.println();
         System.out.println("이동: w(상) a(좌) s(하) d(우)");
+    }
+    /** s_type → 맵 심볼 변환 */
+    private String getSymbol(Stage s) {
+        if (s == null) return "?";
+        if (s.getS_type() == null) return ".";
+
+        switch (s.getS_type()) {
+            case "start":  return "S";
+            case "finish": return "F";
+            case "n":      return "N";  // 몬스터
+            case "i":      return "I";  // 아이템
+            case "w":      return ".";  // 벽
+            case "v":      return "■";  // 빈 칸
+            case "e":      return "E";  // 이벤트
+            default:       return "?";
+        }
     }
 
     /** 이동 입력 받기 */

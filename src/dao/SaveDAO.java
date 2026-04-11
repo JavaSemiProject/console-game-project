@@ -5,7 +5,10 @@ import model.Item;
 import model.Save;
 import model.Card;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
+
+import static db.DBConnection.getConnection;
 
 
 public class SaveDAO {
@@ -21,7 +24,7 @@ public class SaveDAO {
             LIMIT 1
             """;
 
-    try (Connection conn = DBConnection.getConnection();
+    try (Connection conn = getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
       ResultSet rs = pstmt.executeQuery();
@@ -31,11 +34,11 @@ public class SaveDAO {
         List<Item> items = new ItemDAO().findAllByTry(tryNum);
 
         return new Save(
-            null,                         // lId
-            tryNum,                         // tryNum
-            rs.getTimestamp("time"), // time
-            cards,                          // cards
-            items                           // items
+            rs.getString("s_id"),
+            rs.getInt("try"),
+            rs.getTimestamp("t_time"),
+            new ArrayList<>(),
+            new ArrayList<>()
         );
       }
     } catch (SQLException e) {
@@ -45,8 +48,8 @@ public class SaveDAO {
   }
 
   public int createSave() {
-    String sql = "INSERT INTO save (`time`) VALUES (CURRENT_TIMESTAMP)";
-    try (Connection conn = DBConnection.getConnection();
+    String sql = "INSERT INTO save (`t_time`) VALUES (CURRENT_TIMESTAMP)";
+    try (Connection conn = getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
       pstmt.executeUpdate();
@@ -58,5 +61,52 @@ public class SaveDAO {
       e.printStackTrace();
     }
     return -1;
+  }
+
+  // 필요 시 업데이트용 (세이브 포인트 이동 시 s_id 업데이트)
+  public boolean updateStage(String stageId, int tryNum) {
+    String sql = "UPDATE save SET s_id = ? WHERE `try` = ?";
+
+    try (Connection conn = getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+      pstmt.setString(1, stageId);
+      pstmt.setInt(2, tryNum);
+
+      return pstmt.executeUpdate() > 0;
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  public int getLatestTryNum() {
+    String sql = "SELECT MAX(id) as latest FROM save";
+    try (Connection conn = getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql);
+         ResultSet rs = pstmt.executeQuery()) {
+      if (rs.next()) {
+        Integer latest = rs.getInt("latest");
+        return latest > 0 ? latest : -1;
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return -1;
+  }
+
+  public String getLatestStage(int tryNum) {
+    String sql = "SELECT stage_name FROM save WHERE id = ? ORDER BY created_at DESC LIMIT 1";
+    try (Connection conn = getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setInt(1, tryNum);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) {
+          return rs.getString("stage_name");
+        }
+      }
+    } catch (Exception e) {
+    }
+    return null;
   }
 }
