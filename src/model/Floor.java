@@ -35,7 +35,7 @@ public class Floor {
   public Floor getNextFloor() { return nextFloor; }
   public void setNextFloor(Floor nextFloor) { this.nextFloor = nextFloor; }
 
-  public Stage getStageById(int stageId) {
+  public Stage getStageById(String stageId) {
     return stages.stream()
         .filter(s->s.getStageId() == stageId)
         .findFirst()

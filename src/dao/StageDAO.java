@@ -20,12 +20,15 @@ public class StageDAO {
       ResultSet rs = pstmt.executeQuery();
 
       if (rs.next()) {
+        // 1. stageId, 2. stageName, 3. row, 4. column, 5. fLevel, 6. s_type, 7. s_prob
         return new Stage(
-            Integer.parseInt(rs.getString("s_id")),
-            rs.getString("s_id"), // stageName으로 s_id 사용
-            rs.getInt("row"),
-            rs.getString("column"),
-            rs.getInt("f_level")
+            rs.getString("s_id"),           // stageId
+            rs.getString("s_id"),           // stageName (s_id 그대로)
+            rs.getInt("s_row"),
+            rs.getString("s_column"),
+            rs.getInt("f_level"),
+            rs.getString("s_type"),         // s_type 필드명 맞추기
+            rs.getDouble("s_prob")          // s_prob (prob이 아니라 s_prob)
         );
       }
     } catch (SQLException e) {
@@ -36,19 +39,20 @@ public class StageDAO {
 
   public List<Stage> findAll() {
     List<Stage> stages = new ArrayList<>();
-    String sql = "SELECT * FROM stage ORDER BY f_level,`row`, `column`";
-
+    String sql = "SELECT * FROM stage ORDER BY f_level, `s_row`, `s_column`";
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql);
          ResultSet rs = pstmt.executeQuery()) {
 
       while (rs.next()) {
         stages.add(new Stage(
-            Integer.parseInt(rs.getString("s_id")),
             rs.getString("s_id"),
-            rs.getInt("row"),
-            rs.getString("column"),
-            rs.getInt("f_level")
+            rs.getString("s_id"),
+            rs.getInt("s_row"),
+            rs.getString("s_column"),
+            rs.getInt("f_level"),
+            rs.getString("s_type"),
+            rs.getDouble("s_prob")
         ));
       }
     } catch (SQLException e) {
@@ -59,7 +63,7 @@ public class StageDAO {
 
   public List<Stage> findByFloorLevel(int fLevel) {
     List<Stage> stages = new ArrayList<>();
-    String sql = "SELECT * FROM stage WHERE f_level = ? ORDER BY `row`, `column`";
+    String sql = "SELECT * FROM stage WHERE f_level = ? ORDER BY `s_row`, `s_column`";
 
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -69,11 +73,13 @@ public class StageDAO {
 
       while (rs.next()) {
         stages.add(new Stage(
-            Integer.parseInt(rs.getString("s_id")),
             rs.getString("s_id"),
-            rs.getInt("row"),
-            rs.getString("column"),
-            rs.getInt("f_level")
+            rs.getString("s_id"),
+            rs.getInt("s_row"),
+            rs.getString("s_column"),
+            rs.getInt("f_level"),
+            rs.getString("s_type"),
+            rs.getDouble("s_prob")
         ));
       }
     } catch (SQLException e) {
