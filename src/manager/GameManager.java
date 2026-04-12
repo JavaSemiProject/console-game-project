@@ -41,6 +41,8 @@ public class GameManager {
     private boolean hasSemicolon;
     private boolean hasBracket;
     private boolean hyejinRoute;
+    private model.Stage heapReturnPos; // 히든맵 탈출 후 7층 복귀 위치
+    private boolean running = true;    // false 시 프로그램 종료
 
     // 플레이어
     private Hero hero;
@@ -141,7 +143,6 @@ public class GameManager {
                 hero, npc, npc.getNName(), playerCards, playerItems, npcCard);
 
         if (br == BattleResult.WIN) {
-            restAfterBattle();
             if (npc.getCId() != null) {
                 Card drop = new CardDAO().findById(npc.getCId());
                 if (drop != null) { playerCards.add(drop); gameView.showAcquire(drop.getCName()); }
@@ -156,8 +157,12 @@ public class GameManager {
         return br;
     }
 
-    private void restAfterBattle() {
-        hero.heal(20);
+    private void fullHealOnFloorStart() {
+        hero.setCurrentHealth(hero.getHealth());
+    }
+
+    private void updateSaveFloor(int floorLevel) {
+        saveManager.updateSaveToFloor(floorLevel, stageManager.getCurrentTryNum());
     }
 
     /**
@@ -197,7 +202,7 @@ public class GameManager {
     public void run() {
         storyManager.loadAll("resource/story");
 
-        while (state != GameState.GAME_OVER) {
+        while (running) {
             eventManager.updateState(hasSemicolon, hasBracket);
 
             switch (state) {
@@ -213,6 +218,11 @@ public class GameManager {
                 case HIDDEN_MAP:  playHiddenMap();   break;
                 case FINAL_FLOOR: playFinalFloor();  break;
                 case ENDING:      playEnding();      break;
+                case GAME_OVER:
+                    gameView.showGameOver();
+                    initGameData();
+                    state = GameState.MAIN_MENU;
+                    break;
             }
         }
         scanner.close();
@@ -244,7 +254,7 @@ public class GameManager {
                 }
                 break;
             case 3: collectionManager.showCollectionMenu(); break;
-            case 4: state = GameState.GAME_OVER; break;
+            case 4: running = false; break;
         }
     }
 
@@ -306,7 +316,6 @@ public class GameManager {
         showDialogue("floor1", "hyejin_disappear");
         playerCards.removeIf(c -> "C001".equals(c.getCId())); // Scanner 비활성화
         awardCardFromDB("c2");
-        hero.heal(20);
 
         state = GameState.FLOOR_2;
     }
@@ -315,6 +324,8 @@ public class GameManager {
     // 2층: 숲 (미주)
     // ============================================
     private void playFloor2() {
+        fullHealOnFloorStart();
+        updateSaveFloor(2);
         showDialogue("floor2", "story");
 
         model.Stage resumePos = null;
@@ -355,7 +366,6 @@ public class GameManager {
                 "B002", "미주", 70, 8, 12, 1, lastPos)) return;
 
         awardCardFromDB("c4");
-        restAfterBattle();
 
         state = GameState.FLOOR_3;
     }
@@ -364,6 +374,8 @@ public class GameManager {
     // 3층: 들판 (솔민)
     // ============================================
     private void playFloor3() {
+        fullHealOnFloorStart();
+        updateSaveFloor(3);
         showDialogue("floor3", "story");
 
         model.Stage resumePos3 = null;
@@ -400,7 +412,6 @@ public class GameManager {
                 "B003", "솔민", 85, 10, 14, 0, lastPos)) return;
 
         awardCardFromDB("c5");
-        restAfterBattle();
 
         state = GameState.FLOOR_4;
     }
@@ -409,6 +420,8 @@ public class GameManager {
     // 4층: 사막 (제석)
     // ============================================
     private void playFloor4() {
+        fullHealOnFloorStart();
+        updateSaveFloor(4);
         showDialogue("floor4", "story");
 
         model.Stage resumePos = null;
@@ -454,7 +467,6 @@ public class GameManager {
                 "B004", "제석", 100, 12, 16, 0, lastPos)) return;
 
         awardCardFromDB("c6");
-        restAfterBattle();
 
         state = GameState.FLOOR_5;
     }
@@ -463,6 +475,8 @@ public class GameManager {
     // 5층: 강물 (수지)
     // ============================================
     private void playFloor5() {
+        fullHealOnFloorStart();
+        updateSaveFloor(5);
         showDialogue("floor5", "story");
 
         model.Stage resumePos5 = null;
@@ -486,7 +500,6 @@ public class GameManager {
                 "B005", "수지", 110, 14, 18, 1, lastPos)) return;
 
         awardCardFromDB("c7");
-        restAfterBattle();
 
         state = GameState.FLOOR_6;
     }
@@ -495,6 +508,8 @@ public class GameManager {
     // 6층: 심해 (봉민)
     // ============================================
     private void playFloor6() {
+        fullHealOnFloorStart();
+        updateSaveFloor(6);
         showDialogue("floor6", "story");
 
         model.Stage resumePos6 = null;
@@ -511,7 +526,23 @@ public class GameManager {
 
             String eid = result.getEventId();
             if (EventManager.CACHE_BATTLE.equals(eid)) {
-                // TODO: 캐시 전투 처리
+                showDialogue("floor6", "cache_battle");
+                NPC cache = stageManager.getNpcById("n12");
+                Card cacheCard = createEnemyCard(cache.getNName());
+                BattleResult cacheResult = battleManager.startCacheBattle(
+                        hero, cache, cache.getNName(), playerCards, playerItems, cacheCard);
+
+                if (cacheResult == BattleResult.LOSE) {
+                    state = GameState.GAME_OVER;
+                    return;
+                } else if (cacheResult == BattleResult.WIN) {
+                    showDialogue("floor6", "cache_battle_win");
+                    Item drop = new ItemDAO().findById("i6");
+                    if (drop != null) { playerItems.add(drop); gameView.showAcquire(drop.getIName()); }
+                } else {
+                    // ENEMY_FLED or FLEE
+                    showDialogue("floor6", "cache_battle_lose");
+                }
                 result.getCurrentPos().consume();
             }
             resumePos6 = result.getCurrentPos();
@@ -524,7 +555,6 @@ public class GameManager {
                 "B006", "봉민", 130, 16, 20, 0, lastPos)) return;
 
         awardCardFromDB("c8");
-        restAfterBattle();
 
         state = GameState.FLOOR_7;
     }
@@ -533,9 +563,16 @@ public class GameManager {
     // 7층: 화산 (민중)
     // ============================================
     private void playFloor7() {
-        showDialogue("floor7", "story");
+        if (heapReturnPos == null) {
+            // 최초 진입
+            fullHealOnFloorStart();
+            updateSaveFloor(7);
+            showDialogue("floor7", "story");
+        }
 
-        model.Stage resumePos = null;
+        model.Stage resumePos = heapReturnPos;
+        heapReturnPos = null; // 복귀 위치 초기화
+
         while (true) {
             ExploreResult result = stageManager.exploreFloor(7, gameView, resumePos, playerCards, playerItems);
             if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
@@ -552,7 +589,8 @@ public class GameManager {
                 EventResult heapResult = eventManager.trigger(eid);
                 if (heapResult == EventResult.SHOW_DIALOGUE) {
                     showDialogue("floor7", "heap_entry");
-                    result.getCurrentPos().consume();
+                    heapReturnPos = result.getCurrentPos(); // 히든맵 탈출 후 복귀 위치 저장
+                    result.getCurrentPos().consume();       // 힙 진입 타일 비활성화
                     state = GameState.HIDDEN_MAP;
                     return;
                 }
@@ -583,7 +621,6 @@ public class GameManager {
             if (result == BattleResult.WIN) {
                 showDialogue("floor7", winTag);
                 awardCardFromDB("c9");
-                hero.heal(30);
                 return true;
             }
             if (result == BattleResult.LOSE) {
@@ -607,13 +644,14 @@ public class GameManager {
         int choice = gameView.showChoice("혜진 루트", "보경 루트");
 
         if (choice == 1) {
-            // 혜진 루트: GC 전투
+            // 혜진 루트: GC 전투 (GC는 죽지 않음 → 도망가야만 탈출 가능)
             hyejinRoute = true;
             showDialogue("heap", "hyejin_route");
 
             NPC gc = new NPC("M_GC", "GC",
                     "가비지 컬렉터. 더 이상 참조되지 않는 것들을 수거한다.",
                     80, false, 14, 20, 1, null);
+            gc.setMinHealth(1); // HP 1 아래로 떨어지지 않음
             Card gcCard = createEnemyCard("GC");
             BattleResult gcResult = battleManager.startBattle(
                     hero, gc, "GC", playerCards, playerItems, gcCard);
@@ -622,9 +660,9 @@ public class GameManager {
                 showDialogue("heap", "gc_battle_lose");
                 state = GameState.GAME_OVER;
                 return;
-            } else if (gcResult == BattleResult.FLEE) {
-                showDialogue("heap", "battle_gc_run_away");
             }
+            // FLEE(도망) 또는 WIN(사실상 불가능) 모두 탈출 성공으로 처리
+            showDialogue("heap", "battle_gc_run_away");
             hasBracket = true;
         } else {
             // 보경 루트: 퀴즈
@@ -644,17 +682,18 @@ public class GameManager {
         }
 
         showDialogue("floor7", "heap_escape");
+        fullHealOnFloorStart();
 
-        // 히든맵 후 7층 보스전 (히든맵 경유이므로 출구 직전 위치 없음)
-        if (fightFloor7Boss(null)) {
-            state = GameState.FINAL_FLOOR;
-        }
+        // 히든맵 탈출 → 7층 탐색으로 복귀 (heapReturnPos에서 재개)
+        state = GameState.FLOOR_7;
     }
 
     // ============================================
     // 8층: 딸깍이 최종전
     // ============================================
     private void playFinalFloor() {
+        fullHealOnFloorStart();
+        updateSaveFloor(8);
         if (hyejinRoute) {
             showDialogue("floor8", "story_with_hyejin");
         } else {
