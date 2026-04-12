@@ -9,4 +9,136 @@
 그리고 존경하는 박보경 선생님
 또 애정하는 반친구들
 
+
+===========메인 스토리 소스 코드===========
+
+import java.util.Scanner;
+import java.util.Random;
+
+class TreeNode {
+    String value;       // 운세 점수 (예: "10%")
+    String message;     // 운세 문구 (예: "조심조심")
+    TreeNode left;
+    TreeNode right;
+
+    TreeNode(String value, String message) {
+        this.value = value;
+        this.message = message;
+        this.left = null;
+        this.right = null;
+    }
+
+    // 10% 단위 확장 (노드 좌우 자식에 10% 차이 노드 생성)
+    void expand() {
+        int current = Integer.parseInt(value.replace("%", ""));
+        int leftVal = current - 10 >= 0 ? current - 10 : 0;
+        int rightVal = current + 10 <= 100 ? current + 10 : 100;
+
+        // 운세 문구는 운세 점수에 따라 간단히 달라짐
+        this.left = new TreeNode(leftVal + "%", messageForPercent(leftVal));
+        this.right = new TreeNode(rightVal + "%", messageForPercent(rightVal));
+    }
+
+    // 재귀적으로 대상 점수에 가장 가까운 노드 찾기
+    TreeNode findClosest(int target) {
+        int currVal = Integer.parseInt(value.replace("%", ""));
+        if (target == currVal) return this;
+        else if (target < currVal) {
+            if (left == null) return this;
+            return left.findClosest(target);
+        } else {
+            if (right == null) return this;
+            return right.findClosest(target);
+        }
+    }
+
+    // 운세 메시지를 점수별로 구분하여 반환
+    static String messageForPercent(int percent) {
+        if (percent >= 90) return "운수대통";
+        else if (percent >= 80) return "행운가득";
+        else if (percent >= 70) return "좋은일만";
+        else if (percent >= 60) return "조심조심";
+        else if (percent >= 50) return "보통운";
+        else if (percent >= 40) return "다소불운";
+        else if (percent >= 30) return "긴장필요";
+        else if (percent >= 20) return "험난운";
+        else if (percent >= 10) return "매우조심";
+        else return "최악주의";
+    }
+}
+
+public class FortuneProgram {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        System.out.println("프로그램을 시작합니다");
+
+        System.out.print("이름을 입력하세요 : ");
+        String name = scanner.nextLine();
+
+        System.out.print("생년월일(6자)을 입력하세요 : ");
+        String birth = scanner.nextLine();
+
+        System.out.println("사용자 정보 입력 중...");
+        sleep(1000);
+
+        System.out.println("로딩 중...");
+        sleep(1000);
+
+        System.out.println("로딩 완료");
+
+        // 50% 기준으로 루트 노드 생성
+        TreeNode root = new TreeNode("50%", TreeNode.messageForPercent(50));
+
+        // 4단계 확장하여 0% ~ 100% 10% 단위 노드 전체 생성
+        root.expand();               // 40%,60%
+        root.left.expand();          // 30%,50%
+        root.right.expand();         // 50%,70%
+        root.left.left.expand();     // 20%,40%
+        root.left.right.expand();    // 40%,60%
+        root.right.left.expand();    // 40%,60%
+        root.right.right.expand();   // 60%,80%
+        root.left.left.left = new TreeNode("10%", TreeNode.messageForPercent(10));
+        root.left.left.right = new TreeNode("30%", TreeNode.messageForPercent(30));
+        root.right.right.right = new TreeNode("90%", TreeNode.messageForPercent(90));
+        root.right.right.right.right = new TreeNode("100%", TreeNode.messageForPercent(100));
+
+        // 운세 점수 랜덤 생성 (10~100)
+        int luckyPercent = 10 * (random.nextInt(10) + 1);
+
+        // 가장 가까운 노드 찾아 운세 출력
+        TreeNode closest = root.findClosest(luckyPercent);
+
+        System.out.println("오늘의 운세는 '" + closest.value + "' 입니다! " + closest.message);
+
+        scanner.close();
+    }
+
+    private static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+.
+.
+.
+
+♣플레이해주셔서 감사합니다♣
+
+01010100 01101000 01100001 01101110 01101011   01111001 01101111 01110101
+01100110 01101111 01110010   01110000 01101100 01100001 01111001 01101001 01101110 01100111
+
+ _____  _                    _                          
+/__   \| |__    __ _  _ __  | | __  _   _   ___   _   _ 
+  / /\/| '_ \  / _` || '_ \ | |/ / | | | | / _ \ | | | |
+ / /   | | | || (_| || | | ||   <  | |_| || (_) || |_| |
+ \/    |_| |_| \__,_||_| |_||_|\_\  \__, | \___/  \__,_|
+                                    |___/               
+
+=======
 ♣플레이해주셔서 감사합니다♣
