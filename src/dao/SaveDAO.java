@@ -24,7 +24,9 @@ public class SaveDAO {
             LIMIT 1
             """;
 
-    try (Connection conn = getConnection();
+    Connection conn = getConnection();
+    if (conn == null) return null;
+    try (conn;
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
       ResultSet rs = pstmt.executeQuery();
@@ -49,13 +51,13 @@ public class SaveDAO {
 
   public int createSave() {
     String sql = "INSERT INTO save (`t_time`) VALUES (CURRENT_TIMESTAMP)";
-    try (Connection conn = getConnection();
+    Connection conn = getConnection();
+    if (conn == null) return -1;
+    try (conn;
          PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
       pstmt.executeUpdate();
-      ResultSet rs = pstmt.getGeneratedKeys();
-      if (rs.next()) {
-        return rs.getInt(1);
+      try (ResultSet rs = pstmt.getGeneratedKeys()) {
+        if (rs.next()) return rs.getInt(1);
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -66,13 +68,12 @@ public class SaveDAO {
   // 필요 시 업데이트용 (세이브 포인트 이동 시 s_id 업데이트)
   public boolean updateStage(String stageId, int tryNum) {
     String sql = "UPDATE save SET s_id = ? WHERE `try` = ?";
-
-    try (Connection conn = getConnection();
+    Connection conn = getConnection();
+    if (conn == null) return false;
+    try (conn;
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
       pstmt.setString(1, stageId);
       pstmt.setInt(2, tryNum);
-
       return pstmt.executeUpdate() > 0;
     } catch (SQLException e) {
       e.printStackTrace();
@@ -82,7 +83,9 @@ public class SaveDAO {
 
   public int getLatestTryNum() {
     String sql = "SELECT MAX(`try`) as latest FROM save";
-    try (Connection conn = getConnection();
+    Connection conn = getConnection();
+    if (conn == null) return -1;
+    try (conn;
          PreparedStatement pstmt = conn.prepareStatement(sql);
          ResultSet rs = pstmt.executeQuery()) {
       if (rs.next()) {
@@ -97,13 +100,13 @@ public class SaveDAO {
 
   public String getLatestStage(int tryNum) {
     String sql = "SELECT s_id FROM save WHERE `try` = ?";
-    try (Connection conn = getConnection();
+    Connection conn = getConnection();
+    if (conn == null) return null;
+    try (conn;
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
       pstmt.setInt(1, tryNum);
       try (ResultSet rs = pstmt.executeQuery()) {
-        if (rs.next()) {
-          return rs.getString("s_id");
-        }
+        if (rs.next()) return rs.getString("s_id");
       }
     } catch (Exception e) {
       e.printStackTrace();

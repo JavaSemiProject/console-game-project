@@ -369,7 +369,7 @@ public class GameView {
     /** Scanner 방어 성공 */
     public void showScannerBlock(int useCount) {
         clearBelow();
-        printSlow("Scanner로 적의 공격을 막았다! (" + useCount + "/3)");
+        printSlow("Scanner로 적의 공격을 막았다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 

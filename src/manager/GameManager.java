@@ -219,9 +219,7 @@ public class GameManager {
                 case FINAL_FLOOR: playFinalFloor();  break;
                 case ENDING:      playEnding();      break;
                 case GAME_OVER:
-                    gameView.showGameOver();
-                    initGameData();
-                    state = GameState.MAIN_MENU;
+                    triggerEnding("LOSE");
                     break;
             }
         }
@@ -748,13 +746,14 @@ public class GameManager {
         String endingName;
         String endingEId;
         switch (endingType) {
-            case "FALL":       endingName = "넘어짐";   endingEId = "e3"; break;
-            case "SHORTCUT":   endingName = "최단거리"; endingEId = "e8"; break;
-            case "BETRAYAL":   endingName = "뒷통수";   endingEId = "e4"; break;
-            case "GC":         endingName = "GC";       endingEId = "e6"; break;
-            case "DEFEAT":     endingName = "패배";     endingEId = "e5"; break;
-            case "HYEJIN":     endingName = "혜진";     endingEId = "e7"; break;
-            case "NO_HYEJIN":  endingName = "혜진 X";   endingEId = "e8"; break;
+            case "FALL":       endingName = "미안해 영균아";   endingEId = "e2"; break;
+            case "SHORTCUT":   endingName = "당기시오"; endingEId = "e3"; break;
+            case "BETRAYAL":   endingName = "엘리트 이선혁";   endingEId = "e4"; break;
+            case "GC":         endingName = "GC에게 수거된 영균";       endingEId = "e6"; break;
+            case "LOSE":       endingName = "바이트코드가 된 영균";     endingEId = "e1"; break;
+            case "DEFEAT":     endingName = "수업시작";     endingEId = "e5"; break;
+            case "HYEJIN":     endingName = "살려줘 영균아";     endingEId = "e7"; break;
+            case "NO_HYEJIN":  endingName = "아 Tlqkf 꿈";   endingEId = "e8"; break;
             default:           endingName = endingType; endingEId = null; break;
         }
         gameView.showEndingTitle(endingName);
