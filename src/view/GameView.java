@@ -224,23 +224,19 @@ public class GameView {
         return sb.toString();
     }
 
-    /** 최종 보스 전투 전용 메뉴 (도망 없음, 브라켓 보유 시 } 카드 옵션 추가) */
-    public int showFinalBattleMenu(int cardCount, int itemCount, boolean hasBracket) {
+    /** 최종 보스 전투 전용 메뉴 (도망 없음, } 카드는 카드 목록 내 하위 선택지로 포함됨) */
+    public int showFinalBattleMenu(int cardCount, int itemCount) {
         clearBelow();
         System.out.println("행동을 선택하세요:");
         System.out.println("1. 카드 사용 (" + cardCount + "장)");
         System.out.println("2. 아이템 사용 (" + itemCount + "개)");
-        if (hasBracket) {
-            System.out.println("3. } 카드 사용");
-        }
         System.out.print(">> ");
 
         while (true) {
             String input = readKey();
             if ("1".equals(input)) return 1;
             if ("2".equals(input)) return 2;
-            if ("3".equals(input) && hasBracket) return 3;
-            System.out.print((hasBracket ? "1~3" : "1~2") + " 중에 선택해주세요.\n>> ");
+            System.out.print("1~2 중에 선택해주세요.\n>> ");
         }
     }
 
