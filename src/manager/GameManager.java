@@ -331,7 +331,10 @@ public class GameManager {
         model.Stage resumePos = null;
         while (true) {
             ExploreResult result = stageManager.exploreFloor(2, gameView, resumePos, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);
@@ -381,7 +384,10 @@ public class GameManager {
         model.Stage resumePos3 = null;
         while (true) {
             ExploreResult result = stageManager.exploreFloor(3, gameView, resumePos3, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos3 = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);
@@ -400,6 +406,9 @@ public class GameManager {
                 } else if (doorResult == EventResult.DOOR_LOCKED) {
                     showDialogue("floor3", "semicolon_door_locked");
                 }
+                result.getCurrentPos().consume();
+            } else if (EventManager.INTERPRETER_ROBOT.equals(eid)) {
+                showDialogue("floor3", "interpreter_robot");
                 result.getCurrentPos().consume();
             }
             resumePos3 = result.getCurrentPos();
@@ -427,7 +436,10 @@ public class GameManager {
         model.Stage resumePos = null;
         while (true) {
             ExploreResult result = stageManager.exploreFloor(4, gameView, resumePos, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);
@@ -482,7 +494,10 @@ public class GameManager {
         model.Stage resumePos5 = null;
         while (true) {
             ExploreResult result = stageManager.exploreFloor(5, gameView, resumePos5, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos5 = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);
@@ -515,7 +530,10 @@ public class GameManager {
         model.Stage resumePos6 = null;
         while (true) {
             ExploreResult result = stageManager.exploreFloor(6, gameView, resumePos6, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos6 = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);
@@ -575,7 +593,10 @@ public class GameManager {
 
         while (true) {
             ExploreResult result = stageManager.exploreFloor(7, gameView, resumePos, playerCards, playerItems);
-            if (result == null || result.getType() == ExploreResult.Type.EXIT) break;
+            if (result == null || result.getType() == ExploreResult.Type.EXIT) {
+                if (result != null) resumePos = result.getLastPos();
+                break;
+            }
 
             if (result.getType() == ExploreResult.Type.NPC_ENCOUNTER) {
                 BattleResult br = handleNpcEncounter(result);

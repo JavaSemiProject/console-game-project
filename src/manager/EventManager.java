@@ -28,7 +28,7 @@ public class EventManager {
     public static final String SEMICOLON_FIND      = "SEMICOLON_FIND";       // 2층: [ ; ] 카드 발견
     public static final String COMMENT_BRANCH      = "COMMENT_BRANCH";       // 2층: 나뭇가지 주석
     public static final String SEMICOLON_DOOR      = "SEMICOLON_DOOR";       // 3층: 세미콜론 문
-    public static final String INTERPRETER_ROBOT   = "INTERPRETER_ROBOT";    // 3층: 인터프리터/JIT 로봇
+    public static final String INTERPRETER_ROBOT   = "INTERPRETER_ROBOT";    // 3층: 인터프리터/JIT 로봇 (실행 엔진)
     public static final String SUSPECT_SUNHYUK     = "SUSPECT_SUNHYUK";      // 4층: 선혁 의심 이벤트
     public static final String CACHE_BATTLE        = "CACHE_BATTLE";         // 6층: 캐시 전투
     public static final String HEAP_ENTRY          = "HEAP_ENTRY";           // 7층: 힙 영역 진입
