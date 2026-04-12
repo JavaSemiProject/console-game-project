@@ -45,6 +45,7 @@ public class Stage {
   public void consume() { this.consumed = true; }
   public int getVisitCount() { return visitCount; }
   public void incrementVisit() { this.visitCount++; }
+  public void reset() { this.consumed = false; this.visitCount = 0; }
   @Override
   public String toString(){
     return String.format("Stage{id=%d, name = '%s'}", stageId, stageName);

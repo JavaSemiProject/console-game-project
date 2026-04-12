@@ -407,6 +407,7 @@ public class GameManager {
                 result.getCurrentPos().consume();
             } else if (EventManager.INTERPRETER_ROBOT.equals(eid)) {
                 showDialogue("floor3", "interpreter_robot");
+                eventManager.setInterpreterRobotDone(true);
                 result.getCurrentPos().consume();
             }
             resumePos3 = result.getCurrentPos();
@@ -660,7 +661,7 @@ public class GameManager {
     private void playHiddenMap() {
         showDialogue("heap", "story");
 
-        int choice = gameView.showChoice("혜진 루트", "보경 루트");
+        int choice = gameView.showChoice("String Pool", "Old Generation");
 
         if (choice == 1) {
             // 혜진 루트: GC 전투 (GC는 죽지 않음 → 도망가야만 탈출 가능)
@@ -719,18 +720,25 @@ public class GameManager {
             showDialogue("floor8", "story_without_hyejin");
         }
 
-        EventResult bracketResult = eventManager.trigger(EventManager.FINAL_BRACKET);
-        if (bracketResult == EventResult.ENDING_DEFEAT) {
-            triggerEnding("DEFEAT");
-            return;
-        }
+        // 딸깍이: HP 9999 / minHealth=1 (물리적으로 처치 불가), 강력한 공격
+        NPC ddalkkagi = createBoss("B_FINAL", "딸깍이", 9999, 50, 80, 0);
+        ddalkkagi.setMinHealth(1);
+        Card ddalkagiCard = createEnemyCard("딸깍이");
 
-        if (hyejinRoute) {
-            showDialogue("floor8", "use_bracket_with_hyejin");
-            triggerEnding("HYEJIN");
+        BattleResult result = battleManager.startFinalBattle(
+                hero, ddalkkagi, "딸깍이", playerCards, playerItems, ddalkagiCard, hasBracket);
+
+        if (result == BattleResult.BRACKET_WIN) {
+            if (hyejinRoute) {
+                showDialogue("floor8", "use_bracket_with_hyejin");
+                triggerEnding("HYEJIN");
+            } else {
+                showDialogue("floor8", "use_bracket_without_hyejin");
+                triggerEnding("NO_HYEJIN");
+            }
         } else {
-            showDialogue("floor8", "use_bracket_without_hyejin");
-            triggerEnding("NO_HYEJIN");
+            // LOSE (브라켓 없이 사망 또는 브라켓 미사용)
+            triggerEnding("DEFEAT");
         }
     }
 
@@ -744,18 +752,44 @@ public class GameManager {
 
     private void playEnding() {
         String endingName;
-        String endingEId;
-        switch (endingType) {
-            case "FALL":       endingName = "미안해 영균아";   endingEId = "e2"; break;
-            case "SHORTCUT":   endingName = "당기시오"; endingEId = "e3"; break;
-            case "BETRAYAL":   endingName = "엘리트 이선혁";   endingEId = "e4"; break;
-            case "GC":         endingName = "GC에게 수거된 영균";       endingEId = "e6"; break;
-            case "LOSE":       endingName = "바이트코드가 된 영균";     endingEId = "e1"; break;
-            case "DEFEAT":     endingName = "수업시작";     endingEId = "e5"; break;
-            case "HYEJIN":     endingName = "살려줘 영균아";     endingEId = "e7"; break;
-            case "NO_HYEJIN":  endingName = "아 Tlqkf 꿈";   endingEId = "e8"; break;
-            default:           endingName = endingType; endingEId = null; break;
-        }
+        String endingEId = switch (endingType) {
+            case "LOSE" -> {
+                endingName = "바이트코드가 된 영균";
+                yield "e1";
+            }
+            case "FALL" -> {
+                endingName = "미안해 영균아";
+                yield "e2";
+            }
+            case "SHORTCUT" -> {
+                endingName = "당기시오";
+                yield "e3";
+            }
+            case "BETRAYAL" -> {
+                endingName = "엘리트 이선혁";
+                yield "e4";
+            }
+            case "DEFEAT" -> {
+                endingName = "수업시작";
+                yield "e5";
+            }
+            case "GC" -> {
+                endingName = "GC에게 수거된 영균";
+                yield "e6";
+            }
+            case "NO_HYEJIN" -> {
+                endingName = "살려줘 영균아";
+                yield "e7";
+            }
+            case "HYEJIN" -> {
+                endingName = "아 Tlqkf 꿈";
+                yield "e8";
+            }
+            default -> {
+                endingName = endingType;
+                yield null;
+            }
+        };
         gameView.showEndingTitle(endingName);
         if (endingEId != null) {
             String img = new dao.CollectionDAO().findEImg(endingEId);

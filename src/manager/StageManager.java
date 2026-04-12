@@ -144,6 +144,11 @@ public class StageManager {
   public void buildFloorChain(int topLevel) {
     currentFloor = Floor.buildChain(topLevel);
 
+    // 새 게임 시작 시 스테이지 상태 초기화 (consumed, visitCount)
+    for (Stage stage : stageList) {
+      stage.reset();
+    }
+
     // 각 층에 해당 스테이지 추가
     for (Stage stage : stageList) {
       Floor targetFloor = findFloor(stage.getFlevel());
