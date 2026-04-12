@@ -668,4 +668,12 @@ public class GameView {
         if (img == null || img.isBlank()) return;
         System.out.println(img);
     }
+
+    /** 아스키아트 한 번에 출력 후 Enter 대기 (타이핑 효과 없음) */
+    public void showAsciiArt(String art) {
+        if (art == null || art.isBlank()) return;
+        clearScreen();
+        System.out.println(art);
+        waitForEnter();
+    }
 }

@@ -755,6 +755,9 @@ public class GameManager {
         state = GameState.FLOOR_7;
     }
 
+    // 딸깍이 등장 아스키아트 — 내용을 여기에 채워 넣으세요
+    private static final String DDALKKAGI_ART = "";
+
     // ============================================
     // 8층: 딸깍이 최종전
     // ============================================
@@ -762,9 +765,13 @@ public class GameManager {
         fullHealOnFloorStart();
         updateSaveFloor(8);
         if (hyejinRoute) {
-            showDialogue("floor8", "story_with_hyejin");
+            showDialogue("floor8", "story_with_hyejin1");
+            gameView.showAsciiArt(DDALKKAGI_ART);
+            showDialogue("floor8", "story_with_hyejin2");
         } else {
-            showDialogue("floor8", "story_without_hyejin");
+            showDialogue("floor8", "story_without_hyejin1");
+            gameView.showAsciiArt(DDALKKAGI_ART);
+            showDialogue("floor8", "story_without_hyejin2");
         }
 
         logNpc("n11");  // 딸깍이 조우 로그
