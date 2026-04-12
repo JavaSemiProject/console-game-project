@@ -37,8 +37,12 @@ public class NPC implements Entity {
         return currentHealth > 0;
     }
 
+    private int minHealth = 0; // HP 하한선 (기본 0, 특수 NPC는 1 이상 설정 가능)
+
+    public void setMinHealth(int minHealth) { this.minHealth = minHealth; }
+
     public void takeDamage(int damage) {
-        currentHealth = Math.max(0, currentHealth - damage);
+        currentHealth = Math.max(minHealth, currentHealth - damage);
     }
 
     public void heal(int amount) {

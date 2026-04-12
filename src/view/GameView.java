@@ -184,7 +184,7 @@ public class GameView {
     public void showBattleStart(String enemyName, int enemyPp) {
         clearScreen();
         printSlow("=================================");
-        printSlow("  " + enemyName + ParticleDAO.lg(enemyPp) + " 나타났다!");
+        printSlow("Boss: " + enemyName);
         printSlow("=================================");
         System.out.println();
     }
