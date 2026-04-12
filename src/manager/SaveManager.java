@@ -72,6 +72,21 @@ public class SaveManager {
   }
 
   /**
+   * 층 전환 시 세이브 갱신: 해당 층의 start 스테이지로 s_id 업데이트
+   */
+  public void updateSaveToFloor(int floorLevel, int tryNum) {
+    if (tryNum == -1) return;
+    Stage startStage = findStartStage(floorLevel);
+    if (startStage == null) {
+      System.err.println("[SaveManager] " + floorLevel + "층의 start 스테이지가 없습니다.");
+      return;
+    }
+    boolean saved = saveDAO.updateStage(startStage.getStageName(), tryNum);
+    System.out.println("[SaveManager] " + floorLevel + "층 세이브 갱신: "
+        + startStage.getStageName() + " / tryNum=" + tryNum + " / saved=" + saved);
+  }
+
+  /**
    * 층에서 s_type = 'start' 인 스테이지 찾기
    */
   private Stage findStartStage(int floorLevel) {

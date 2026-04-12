@@ -2,7 +2,9 @@ package manager;
 
 import dao.SaveDAO;
 import dao.StageDAO;
+import model.Card;
 import model.Floor;
+import model.Item;
 import model.NPC;
 import model.Stage;
 import view.GameView;
@@ -96,6 +98,7 @@ public class StageManager {
       case "event_betrayal":  return EventManager.SUSPECT_SUNHYUK;
       case "event_cache":     return EventManager.CACHE_BATTLE;
       case "event_heap":      return EventManager.HEAP_ENTRY;
+      case "event_engine":    return EventManager.INTERPRETER_ROBOT;
       default: return null;
     }
   }
@@ -141,6 +144,11 @@ public class StageManager {
   public void buildFloorChain(int topLevel) {
     currentFloor = Floor.buildChain(topLevel);
 
+    // 새 게임 시작 시 스테이지 상태 초기화 (consumed, visitCount)
+    for (Stage stage : stageList) {
+      stage.reset();
+    }
+
     // 각 층에 해당 스테이지 추가
     for (Stage stage : stageList) {
       Floor targetFloor = findFloor(stage.getFlevel());
@@ -153,6 +161,10 @@ public class StageManager {
   // ✅ GameManager에서 tryNum 주입
   public void setCurrentTryNum(int tryNum) {
     this.currentTryNum = tryNum;
+  }
+
+  public int getCurrentTryNum() {
+    return currentTryNum;
   }
 
 
@@ -209,7 +221,8 @@ public class StageManager {
   // 맵 탐색 루프 (도착점 a_5 도달 또는 이벤트 타일 도달 시 종료)
   // startPos가 null이면 e_1에서 시작
   // ============================================
-  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos,
+                                    List<Card> cards, List<Item> items) {
     Floor floor = findFloor(floorLevel);
     System.out.println("[DEBUG] exploreFloor(" + floorLevel + ") floor=" + floor
         + " stageCount=" + (floor != null ? floor.getStages().size() : 0));
@@ -231,10 +244,21 @@ public class StageManager {
 
     Stage prevPos = currentPos;
     autoSaveIfStart(currentPos, gameView);
+    String statusMessage = null;
 
     while (true) {
       gameView.showMap(floor, currentPos);
+      if (statusMessage != null) {
+        System.out.println(statusMessage);
+        System.out.flush();
+        statusMessage = null;
+      }
       String input = gameView.getMovementInput();
+
+      if ("i".equals(input)) {
+        gameView.showInventoryView(cards, items);
+        continue;
+      }
 
       int nextRow = currentPos.getRow();
       char nextCol = currentPos.getColumn().charAt(0);
@@ -263,7 +287,7 @@ public class StageManager {
 
       // finish 도달 시 종료
       if ("finish".equals(currentPos.getS_type())) {
-        gameView.showMessage("\n>> 출구를 발견했다!");
+        gameView.showMessage("\n...");
         gameView.waitForEnter();
         Stage nextFloorStart = findStageStart(floorLevel + 1);
         if (nextFloorStart != null && currentTryNum != -1) {
@@ -275,11 +299,24 @@ public class StageManager {
         return new ExploreResult(ExploreResult.Type.EXIT, null, prevPos, currentPos);
       }
 
-      // 확률 기반 npc_i / event_* 처리
+      // 이벤트/NPC 타일 처리
       String sType = currentPos.getS_type();
       if (!currentPos.isConsumed() && needsProbCheck(sType)) {
-        double roll = Math.random() * 100;
-        if (roll < currentPos.getS_prob()) {
+        currentPos.incrementVisit();
+
+        boolean trigger;
+        if ("event_semicolon".equals(sType)) {
+          // 세미콜론 이벤트: 3회 방문 시 발동
+          trigger = currentPos.getVisitCount() >= 3;
+        } else if ("event_door".equals(sType) || "event_betrayal".equals(sType) || "event_heap".equals(sType)) {
+          // 스토리 이벤트: 항상 발동
+          trigger = true;
+        } else {
+          // 그 외(event_comment, event_cache, npc_i): s_prob 확률 기반
+          trigger = Math.random() * 100 < currentPos.getS_prob();
+        }
+
+        if (trigger) {
           if ("npc_i".equals(sType)) {
             return new ExploreResult(ExploreResult.Type.NPC_ENCOUNTER,
                 currentPos.getNId(), prevPos, currentPos);
@@ -291,12 +328,17 @@ public class StageManager {
           }
         }
       }
+
+      // 이벤트/NPC 없이 이동만 한 경우 (빈 공간) — 다음 맵 렌더 후 표시
+      if (!"start".equals(sType)) {
+        statusMessage = gameView.getRandomVoidMessage();
+      }
     }
   }
 
-  /** 기본 시작 위치(e_1)로 탐색 */
-  public ExploreResult exploreFloor(int floorLevel, GameView gameView) {
-    return exploreFloor(floorLevel, gameView, null);
+  /** startPos 지정, 인벤토리 없이 탐색 (보스 도망 복귀 등 내부용) */
+  public ExploreResult exploreFloor(int floorLevel, GameView gameView, Stage startPos) {
+    return exploreFloor(floorLevel, gameView, startPos, new ArrayList<>(), new ArrayList<>());
   }
 
   public Floor getFloor(int level) {

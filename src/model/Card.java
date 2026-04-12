@@ -15,9 +15,12 @@ class AttackEffect implements CardEffect {
     }
     
     public int execute(Entity user, Entity target) {
-        target.takeDamage(power);
-        System.out.println(">> " + power + " 데미지를 입혔다!");
-        return power;
+        int min = user.getPowerMin();
+        int max = user.getPowerMax();
+        int base = (max > min) ? min + (int)(Math.random() * (max - min + 1)) : min;
+        int total = base + card.getCPower();
+        target.takeDamage(total);
+        return total;
     }
     
     public String getDescription() {
@@ -77,8 +80,9 @@ public class Card {
     private String cDesc;    // 카드 설명
     private String cUseMsg;  // 카드 사용 시 메시지 (nullable)
     private String cImg;     // 카드 이미지 (nullable)
-    private int tryNum;      // 최초 획득 트라이
+    private int tryNum;         // 최초 획득 트라이
     private CardEffect effect;
+    private boolean combatUsable = true; // 전투 중 사용 가능 여부
 
     private Card(Builder builder) {
         this.cId = builder.cId;
@@ -91,6 +95,7 @@ public class Card {
         this.cImg = builder.cImg;
         this.tryNum = builder.tryNum;
         this.effect = builder.effect;
+        this.combatUsable = true;
     }
 
     public static class Builder {
@@ -145,6 +150,8 @@ public class Card {
     public void setCImg(String cImg) { this.cImg = cImg; }
     public void setTryNum(int tryNum) { this.tryNum = tryNum; }
     public void setEffect(CardEffect effect) { this.effect = effect; }
+    public boolean isCombatUsable() { return combatUsable; }
+    public void setCombatUsable(boolean combatUsable) { this.combatUsable = combatUsable; }
 
     @Override
     public String toString() {
