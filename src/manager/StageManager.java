@@ -275,7 +275,7 @@ public class StageManager {
 
       // finish 도달 시 종료
       if ("finish".equals(currentPos.getS_type())) {
-        gameView.showMessage("\n>> 출구를 발견했다!");
+        gameView.showMessage("\n...");
         gameView.waitForEnter();
         Stage nextFloorStart = findStageStart(floorLevel + 1);
         if (nextFloorStart != null && currentTryNum != -1) {

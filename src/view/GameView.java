@@ -335,6 +335,15 @@ public class GameView {
         waitForEnter();
     }
 
+    /** 게임 오버 화면 */
+    public void showGameOver() {
+        clearScreen();
+        printSlow("=================================");
+        printSlow("       GAME  OVER");
+        printSlow("=================================");
+        waitForEnter();
+    }
+
     /** 도망 */
     public void showFlee() {
         clearBelow();
