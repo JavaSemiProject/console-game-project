@@ -1,9 +1,11 @@
 package view;
 
+import dao.ParticleDAO;
 import model.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class GameView {
@@ -14,6 +16,10 @@ public class GameView {
         this.scanner = scanner;
     }
 
+    private String readKey() {
+        return scanner.nextLine().trim().toLowerCase();
+    }
+
     // ============================================
     // 화면 제어
     // ============================================
@@ -21,7 +27,11 @@ public class GameView {
     /** 콘솔 화면 클리어 */
     public void clearScreen() {
         try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            new ProcessBuilder("cmd", "/c", "cls")
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
+                .waitFor();
         } catch (Exception e) {
             // cmd 실행 불가 시 ANSI 폴백
             System.out.print("\033[3J\033[2J\033[H");
@@ -32,8 +42,8 @@ public class GameView {
     /** Enter 입력 대기. 's' 입력 시 true 반환 (스킵 요청) */
     public boolean waitForEnter() {
         System.out.println("\n[ Enter: 계속 ]");
-        String input = scanner.nextLine().trim().toLowerCase();
-        return input.equals("s");
+        String input = readKey();
+        return "s".equals(input);
     }
 
     /** 버퍼에 쌓인 입력을 비운다 */
@@ -151,7 +161,7 @@ public class GameView {
         System.out.print("\n>> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int choice = Integer.parseInt(input);
                 if (choice >= 1 && choice <= options.length) {
@@ -180,10 +190,10 @@ public class GameView {
     }
 
     /** 전투 시작 연출 */
-    public void showBattleStart(String enemyName) {
+    public void showBattleStart(String enemyName, int enemyPp) {
         clearScreen();
         printSlow("=================================");
-        printSlow("  " + enemyName + "이(가) 나타났다!");
+        printSlow("Boss: " + enemyName);
         printSlow("=================================");
         System.out.println();
     }
@@ -214,6 +224,26 @@ public class GameView {
         return sb.toString();
     }
 
+    /** 최종 보스 전투 전용 메뉴 (도망 없음, 브라켓 보유 시 } 카드 옵션 추가) */
+    public int showFinalBattleMenu(int cardCount, int itemCount, boolean hasBracket) {
+        clearBelow();
+        System.out.println("행동을 선택하세요:");
+        System.out.println("1. 카드 사용 (" + cardCount + "장)");
+        System.out.println("2. 아이템 사용 (" + itemCount + "개)");
+        if (hasBracket) {
+            System.out.println("3. } 카드 사용");
+        }
+        System.out.print(">> ");
+
+        while (true) {
+            String input = readKey();
+            if ("1".equals(input)) return 1;
+            if ("2".equals(input)) return 2;
+            if ("3".equals(input) && hasBracket) return 3;
+            System.out.print((hasBracket ? "1~3" : "1~2") + " 중에 선택해주세요.\n>> ");
+        }
+    }
+
     /** 플레이어 행동 선택 메뉴 */
     public int showPlayerMenu(int cardCount, int itemCount) {
         clearBelow();
@@ -224,7 +254,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             switch (input) {
                 case "1": return 1;
                 case "2": return 2;
@@ -255,7 +285,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int idx = Integer.parseInt(input);
                 if (idx == 0) return 0;
@@ -281,7 +311,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int idx = Integer.parseInt(input);
                 if (idx == 0) return 0;
@@ -292,24 +322,35 @@ public class GameView {
     }
 
     /** 공격 결과 출력 */
-    public void showAttackResult(String attackerName, String cardName, int damage) {
+    public void showAttackResult(String attackerName, int attackerPp,
+                                 Card card,
+                                 String targetName, int targetPp,
+                                 int damage) {
         clearBelow();
-        printSlow(attackerName + "의 " + cardName + "! " + damage + " 데미지!");
+        printSlow(attackerName + ParticleDAO.lg(attackerPp) + " "
+                + card.getCName() + ParticleDAO.er(card.getPp()) + " 사용했다.");
+        if (card.getCUseMsg() != null && !card.getCUseMsg().isEmpty()) {
+            printSlow(card.getCUseMsg());
+        }
+        printSlow(targetName + ParticleDAO.lg(targetPp) + " " + damage + "의 대미지를 입었다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 아이템 사용 결과 출력 */
-    public void showItemUseResult(String itemName) {
+    public void showItemUseResult(Item item) {
         clearBelow();
-        printSlow(itemName + "을(를) 사용했다!");
+        printSlow(item.getIName() + ParticleDAO.er(item.getPp()) + " 사용했다.");
+        if (item.getIUseMsg() != null && !item.getIUseMsg().isEmpty()) {
+            printSlow(item.getIUseMsg());
+        }
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** 전투 승리 */
-    public void showBattleWin(String enemyName) {
+    public void showBattleWin(String enemyName, int enemyPp) {
         clearBelow();
         printSlow("=================================");
-        printSlow("  " + enemyName + "을(를) 쓰러뜨렸다!");
+        printSlow("  " + enemyName + ParticleDAO.er(enemyPp) + " 쓰러뜨렸다!");
         printSlow("=================================");
         waitForEnter();
     }
@@ -323,6 +364,15 @@ public class GameView {
         waitForEnter();
     }
 
+    /** 게임 오버 화면 */
+    public void showGameOver() {
+        clearScreen();
+        printSlow("=================================");
+        printSlow("       GAME  OVER");
+        printSlow("=================================");
+        waitForEnter();
+    }
+
     /** 도망 */
     public void showFlee() {
         clearBelow();
@@ -330,16 +380,16 @@ public class GameView {
     }
 
     /** 적이 도망 */
-    public void showEnemyFled(String enemyName) {
+    public void showEnemyFled(String enemyName, int enemyPp) {
         clearBelow();
-        printSlow(enemyName + "이(가) 도망쳤다!");
+        printSlow(enemyName + ParticleDAO.lg(enemyPp) + " 도망쳤다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
     /** Scanner 방어 성공 */
     public void showScannerBlock(int useCount) {
         clearBelow();
-        printSlow("Scanner로 적의 공격을 막았다! (" + useCount + "/3)");
+        printSlow("Scanner로 적의 공격을 막았다!");
         try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
 
@@ -404,51 +454,27 @@ public class GameView {
         System.out.println("이동: w(상) a(좌) s(하) d(우)");*/
 
         clearScreen();
-        System.out.println(floor.getFloorLevel() + "층 - 현재 위치: "
-            + currentPos.getColumn() + "_" + currentPos.getRow());
-        System.out.println();
-
-// 범례
-        System.out.println("  @ 현재위치  N 몬스터  I 아이템  E 이벤트  F 출구  S 시작");
-        System.out.println();
-
-// 열 헤더 (a~e)
-        System.out.print("      ");
-        char[] colLabels = {'a', 'b', 'c', 'd', 'e'};
-        for (char c : colLabels) {
-            System.out.print("  " + c + "  ");
-        }
-        System.out.println();
-
-// 행 (1~5)
-        for (int r = 1; r <= 5; r++) {
-            final int currentRow = r;
-            System.out.print("  " + r + "  ");
-            for (char c : colLabels) {
-                final String currentCol = String.valueOf(c);
-                boolean isHere = currentPos.getRow() == currentRow
-                    && currentPos.getColumn().equals(currentCol);
-
-                if (isHere) {
-                    System.out.print("[ @ ]");
-                } else {
-                    Stage s = floor.getStages().stream()
-                        .filter(st -> st.getRow() == currentRow
-                            && st.getColumn().equals(currentCol))
-                        .findFirst()
-                        .orElse(null);
-
-                    String symbol = getSymbol(s);
-                    System.out.print("[ " + symbol + " ]");
-                }
-            }
-            System.out.println();
-        }
-
-        System.out.println();
-        System.out.println("이동: w(상) a(좌) s(하) d(우)");
+        String theme = getFloorTheme(floor.getFloorLevel());
+        System.out.println("==========================");
+        System.out.println(floor.getFloorLevel() + "층: " + theme);
+        System.out.println("==========================");
+        System.out.println("[DEBUG] " + currentPos.getColumn() + "_" + currentPos.getRow());
+        System.out.println("이동: w(상) a(좌) s(하) d(우)  |  i: 인벤토리");
     }
     /** s_type → 맵 심볼 변환 */
+    private String getFloorTheme(int level) {
+        switch (level) {
+            case 2: return "숲";
+            case 3: return "들판";
+            case 4: return "사막";
+            case 5: return "강물";
+            case 6: return "심해";
+            case 7: return "화산";
+            case 8: return "쓰레기장";
+            default: return level + "층";
+        }
+    }
+
     private String getSymbol(Stage s) {
         if (s == null) return "?";
         if (s.getS_type() == null) return ".";
@@ -468,12 +494,59 @@ public class GameView {
     /** 이동 입력 받기 */
     public String getMovementInput() {
         System.out.print(">> ");
-        return scanner.nextLine().trim().toLowerCase();
+        return readKey();
     }
 
-    /** 맵 경고 메시지 (경계 밖 이동 등) */
+    /** 탐색 중 인벤토리 조회 (읽기 전용) */
+    public void showInventoryView(List<Card> cards, List<Item> items) {
+        clearScreen();
+        System.out.println("========== 인벤토리 ==========");
+
+        System.out.println("\n[ 카드 ]");
+        if (cards.isEmpty()) {
+            System.out.println("  보유한 카드가 없습니다.");
+        } else {
+            for (int i = 0; i < cards.size(); i++) {
+                Card c = cards.get(i);
+                if (c.getCPower() > 0) {
+                    System.out.printf("  %d. %-20s ATK: %d%n", i + 1, c.getCName(), c.getCPower());
+                } else {
+                    System.out.printf("  %d. %s%n", i + 1, c.getCName());
+                }
+            }
+        }
+
+        System.out.println("\n[ 아이템 ]");
+        if (items.isEmpty()) {
+            System.out.println("  보유한 아이템이 없습니다.");
+        } else {
+            for (int i = 0; i < items.size(); i++) {
+                Item it = items.get(i);
+                System.out.printf("  %d. %s%n", i + 1, it.getIName());
+            }
+        }
+
+        System.out.println("\n==============================");
+        System.out.println("[ Enter: 돌아가기 ]");
+        readKey();
+    }
+
+    /** 맵 경고 메시지 (벽, 경계 밖 이동 등) — 확인 후 Enter 대기 */
     public void showMapAlert(String message) {
         System.out.println(message);
+        waitForEnter();
+    }
+
+    private static final String[] VOID_MESSAGES = {
+        "아무것도 없다...",
+        "조용하네...",
+        "먼지만 날린다..."
+    };
+    private static final Random VOID_RANDOM = new Random();
+
+    /** 빈 공간 랜덤 메시지 반환 (출력은 호출자 책임) */
+    public String getRandomVoidMessage() {
+        return VOID_MESSAGES[VOID_RANDOM.nextInt(VOID_MESSAGES.length)];
     }
 
     /** 층 이동 연출 */
@@ -514,6 +587,57 @@ public class GameView {
         return showChoice("카드 도감", "아이템 도감", "보스 도감", "엔딩 도감", "돌아가기");
     }
 
+    /**
+     * 도감 목록 표시 (번호 선택 → 상세 보기).
+     * @return 선택한 항목 index (0-based), -1이면 뒤로가기
+     */
+    public int showCollectionList(String title, List<CollectionEntry> entries) {
+        clearScreen();
+        System.out.println("=== " + title + " ===");
+        for (int i = 0; i < entries.size(); i++) {
+            CollectionEntry e = entries.get(i);
+            if (e.isFound()) {
+                System.out.printf(" %2d. [%s] — %d회차 최초 발견 (%d회)%n",
+                        i + 1, e.getName(), e.getFirstTry(), e.getCount());
+            } else {
+                System.out.printf(" %2d. [???]%n", i + 1);
+            }
+        }
+        System.out.println("  0. 뒤로가기");
+        System.out.print(">> ");
+        while (true) {
+            String input = readKey();
+            if ("0".equals(input)) return -1;
+            try {
+                int n = Integer.parseInt(input);
+                if (n >= 1 && n <= entries.size()) return n - 1;
+            } catch (NumberFormatException ignored) {}
+            System.out.print("0~" + entries.size() + " 중에 선택해주세요.\n>> ");
+        }
+    }
+
+    /** 도감 상세 표시 (name, desc, img). img가 null이면 생략. */
+    public void showCollectionDetail(String name, String desc, String img) {
+        clearScreen();
+        System.out.println("=== " + name + " ===");
+        System.out.println();
+        if (desc != null && !desc.isBlank()) {
+            System.out.println(desc);
+        }
+        if (img != null && !img.isBlank()) {
+            System.out.println();
+            System.out.println(img);
+        }
+        System.out.println();
+        waitForEnter();
+    }
+
+    /** 미발견 항목 상세 시도 시 표시 */
+    public void showCollectionLocked() {
+        System.out.println("\n[???] 아직 발견하지 못한 항목입니다.");
+        waitForEnter();
+    }
+
     // ============================================
     // 시스템 메시지
     // ============================================
@@ -526,6 +650,7 @@ public class GameView {
     /** 카드/아이템 획득 연출 */
     public void showAcquire(String itemName) {
         printSlow("『" + itemName + "』을(를) 획득했다!");
+        waitForEnter();
     }
 
     /** 엔딩 타이틀 출력 */
@@ -536,5 +661,11 @@ public class GameView {
         printSlow("  ENDING: " + endingName, 50);
         printSlow("──────────────────────────────", 20);
         System.out.println();
+    }
+
+    /** 엔딩 이미지(e_img) 출력 */
+    public void showEndingImage(String img) {
+        if (img == null || img.isBlank()) return;
+        System.out.println(img);
     }
 }

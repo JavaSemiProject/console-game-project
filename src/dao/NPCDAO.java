@@ -29,7 +29,8 @@ public class NPCDAO {
             rs.getInt("power_min"),
             rs.getInt("power_max"),
             rs.getInt("pp"),
-            rs.getString("c_id")
+            rs.getString("c_id"),
+            rs.getString("i_id")
         );
       }
     } catch (SQLException e) {

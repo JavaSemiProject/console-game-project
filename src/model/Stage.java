@@ -12,6 +12,7 @@ public class Stage {
   private Double s_prob;
   private String nId;       // npc_i 타일의 NPC ID (n_id 컬럼)
   private boolean consumed; // 일회성 이벤트 소모 여부
+  private int visitCount;   // 해당 타일 방문 횟수
 
   public Stage(String stageId, String stageName, int row, String column, int fLevel, String s_type, Double s_prob){
     this.stageId = stageId;
@@ -23,6 +24,7 @@ public class Stage {
     this.s_type = s_type;
     this.s_prob = s_prob;
     this.consumed = false;
+    this.visitCount = 0;
   }
 
   public String getStageId() {return stageId;}
@@ -41,6 +43,9 @@ public class Stage {
   public void setNId(String nId) { this.nId = nId; }
   public boolean isConsumed() { return consumed; }
   public void consume() { this.consumed = true; }
+  public int getVisitCount() { return visitCount; }
+  public void incrementVisit() { this.visitCount++; }
+  public void reset() { this.consumed = false; this.visitCount = 0; }
   @Override
   public String toString(){
     return String.format("Stage{id=%d, name = '%s'}", stageId, stageName);
