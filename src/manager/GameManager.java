@@ -767,11 +767,11 @@ public class GameManager {
         if (hyejinRoute) {
             showDialogue("floor8", "story_with_hyejin1");
             gameView.showAsciiArt(DDALKKAGI_ART);
-            showDialogue("floor8", "story_with_hyejin2");
+            showDialogueContinue("floor8", "story_with_hyejin2");
         } else {
             showDialogue("floor8", "story_without_hyejin1");
             gameView.showAsciiArt(DDALKKAGI_ART);
-            showDialogue("floor8", "story_without_hyejin2");
+            showDialogueContinue("floor8", "story_without_hyejin2");
         }
 
         logNpc("n11");  // 딸깍이 조우 로그
@@ -873,6 +873,12 @@ public class GameManager {
     private void showDialogue(String prefix, String tag) {
         List<String> lines = storyManager.get(prefix, tag);
         gameView.showDialogue(lines);
+    }
+
+    /** clearScreen 없이 현재 화면에 이어서 대사 출력 (아스키아트 직후 사용) */
+    private void showDialogueContinue(String prefix, String tag) {
+        List<String> lines = storyManager.get(prefix, tag);
+        gameView.showDialogueContinue(lines);
     }
 
     // ============================================

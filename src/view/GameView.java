@@ -669,11 +669,42 @@ public class GameView {
         System.out.println(img);
     }
 
-    /** 아스키아트 한 번에 출력 후 Enter 대기 (타이핑 효과 없음) */
+    /**
+     * 아스키아트를 현재 화면에 이어서 한 번에 출력 (clearScreen 없음, Enter 대기 없음).
+     * 이후 showDialogueContinue()로 다음 대사를 바로 이어 출력한다.
+     */
     public void showAsciiArt(String art) {
         if (art == null || art.isBlank()) return;
-        clearScreen();
         System.out.println(art);
+    }
+
+    /**
+     * 화면을 지우지 않고 현재 위치에서 이어서 대사를 타이핑 출력.
+     * 아스키아트 직후 연속 출력할 때 사용.
+     */
+    public void showDialogueContinue(List<String> lines) {
+        flushInput();
+        boolean skip = false;
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+
+            if (skip) {
+                System.out.println(line);
+                continue;
+            }
+
+            if (line.isEmpty()) {
+                System.out.println();
+                skip = sleepWithSkipCheck(300);
+            } else {
+                skip = printSlow(line);
+            }
+            if (!skip && i < lines.size() - 1) {
+                skip = sleepWithSkipCheck(300);
+            }
+        }
+
         waitForEnter();
     }
 }
