@@ -66,6 +66,7 @@ public class StoryManager {
         loadFile(basePath + "/heap.txt",       "heap");
         loadFile(basePath + "/floor8.txt",     "floor8");
         loadFile(basePath + "/system.txt",     "system");
+        loadFile(basePath + "/ascii_art.txt",  "ascii_art");
     }
 
     // ============================================

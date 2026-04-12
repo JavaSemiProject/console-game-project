@@ -761,10 +761,15 @@ public class GameManager {
     private void playFinalFloor() {
         fullHealOnFloorStart();
         updateSaveFloor(8);
+        String ddalkkagi_art = String.join("\n", storyManager.get("ascii_art", "ddalkkagi_image"));
         if (hyejinRoute) {
-            showDialogue("floor8", "story_with_hyejin");
+            showDialogue("floor8", "story_with_hyejin1");
+            gameView.showAsciiArt(ddalkkagi_art);
+            showDialogueContinue("floor8", "story_with_hyejin2");
         } else {
-            showDialogue("floor8", "story_without_hyejin");
+            showDialogue("floor8", "story_without_hyejin1");
+            gameView.showAsciiArt(ddalkkagi_art);
+            showDialogueContinue("floor8", "story_without_hyejin2");
         }
 
         logNpc("n11");  // 딸깍이 조우 로그
@@ -866,6 +871,12 @@ public class GameManager {
     private void showDialogue(String prefix, String tag) {
         List<String> lines = storyManager.get(prefix, tag);
         gameView.showDialogue(lines);
+    }
+
+    /** clearScreen 없이 현재 화면에 이어서 대사 출력 (아스키아트 직후 사용) */
+    private void showDialogueContinue(String prefix, String tag) {
+        List<String> lines = storyManager.get(prefix, tag);
+        gameView.showDialogueContinue(lines);
     }
 
     // ============================================

@@ -224,23 +224,19 @@ public class GameView {
         return sb.toString();
     }
 
-    /** 최종 보스 전투 전용 메뉴 (도망 없음, 브라켓 보유 시 } 카드 옵션 추가) */
-    public int showFinalBattleMenu(int cardCount, int itemCount, boolean hasBracket) {
+    /** 최종 보스 전투 전용 메뉴 (도망 없음, } 카드는 카드 목록 내 하위 선택지로 포함됨) */
+    public int showFinalBattleMenu(int cardCount, int itemCount) {
         clearBelow();
         System.out.println("행동을 선택하세요:");
         System.out.println("1. 카드 사용 (" + cardCount + "장)");
         System.out.println("2. 아이템 사용 (" + itemCount + "개)");
-        if (hasBracket) {
-            System.out.println("3. } 카드 사용");
-        }
         System.out.print(">> ");
 
         while (true) {
             String input = readKey();
             if ("1".equals(input)) return 1;
             if ("2".equals(input)) return 2;
-            if ("3".equals(input) && hasBracket) return 3;
-            System.out.print((hasBracket ? "1~3" : "1~2") + " 중에 선택해주세요.\n>> ");
+            System.out.print("1~2 중에 선택해주세요.\n>> ");
         }
     }
 
@@ -458,7 +454,6 @@ public class GameView {
         System.out.println("==========================");
         System.out.println(floor.getFloorLevel() + "층: " + theme);
         System.out.println("==========================");
-        System.out.println("[DEBUG] " + currentPos.getColumn() + "_" + currentPos.getRow());
         System.out.println("이동: w(상) a(좌) s(하) d(우)  |  i: 인벤토리");
     }
     /** s_type → 맵 심볼 변환 */
@@ -667,5 +662,44 @@ public class GameView {
     public void showEndingImage(String img) {
         if (img == null || img.isBlank()) return;
         System.out.println(img);
+    }
+
+    /**
+     * 아스키아트를 현재 화면에 이어서 한 번에 출력 (clearScreen 없음, Enter 대기 없음).
+     * 이후 showDialogueContinue()로 다음 대사를 바로 이어 출력한다.
+     */
+    public void showAsciiArt(String art) {
+        if (art == null || art.isBlank()) return;
+        System.out.println(art);
+    }
+
+    /**
+     * 화면을 지우지 않고 현재 위치에서 이어서 대사를 타이핑 출력.
+     * 아스키아트 직후 연속 출력할 때 사용.
+     */
+    public void showDialogueContinue(List<String> lines) {
+        flushInput();
+        boolean skip = false;
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+
+            if (skip) {
+                System.out.println(line);
+                continue;
+            }
+
+            if (line.isEmpty()) {
+                System.out.println();
+                skip = sleepWithSkipCheck(300);
+            } else {
+                skip = printSlow(line);
+            }
+            if (!skip && i < lines.size() - 1) {
+                skip = sleepWithSkipCheck(300);
+            }
+        }
+
+        waitForEnter();
     }
 }

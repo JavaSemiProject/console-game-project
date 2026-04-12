@@ -243,23 +243,41 @@ public class BattleManager {
     // - minHealth=1 설정으로 물리적으로 처치 불가
     // - hasBracket=true 일 때만 "} 카드 사용" 옵션 활성화
     // ============================================
+    private static final String BRACKET_CARD_ID = "C_BRACKET";
+
     public BattleResult startFinalBattle(Entity player, Entity enemy, String enemyName,
                                          List<Card> playerCards, List<Item> playerItems,
                                          Card enemyCard, boolean hasBracket) {
         gameView.showBattleStart(enemyName, enemy.getPp());
+
+        // } 카드: 카드 목록에 끼워 넣을 전용 카드 객체 (hasBracket일 때만 추가)
+        Card bracketCard = hasBracket
+                ? Card.createAttackCard(BRACKET_CARD_ID, 1, "} (닫는 괄호)", "BRACKET", 0,
+                        "코드 블록을 닫는 기호.", null, null, 0)
+                : null;
 
         while (player.getCurrentHealth() > 0) {
 
             // --- 플레이어 턴 ---
             gameView.showBattleStatus(player, enemy, enemyName);
             List<Card> usableCards = combatCards(playerCards);
-            int choice = gameView.showFinalBattleMenu(usableCards.size(), playerItems.size(), hasBracket);
+            if (bracketCard != null) usableCards.add(bracketCard);  // } 카드 목록에 포함
+
+            int choice = gameView.showFinalBattleMenu(usableCards.size(), playerItems.size());
 
             switch (choice) {
                 case 1: // 카드 사용
                     int cardIdx = gameView.showCardList(usableCards);
                     if (cardIdx <= 0) continue;
                     Card selected = usableCards.get(cardIdx - 1);
+
+                    if (BRACKET_CARD_ID.equals(selected.getCId())) {
+                        // } 카드 선택 → 클리어
+                        gameView.showMessage("혹시 이거라면...?");
+                        gameView.waitForEnter();
+                        return BattleResult.BRACKET_WIN;
+                    }
+
                     int damage = selected.use(player, enemy);
                     gameView.showAttackResult("영균", player.getPp(), selected, enemyName, enemy.getPp(), damage);
                     break;
@@ -271,11 +289,6 @@ public class BattleManager {
                     item.use(player);
                     gameView.showItemUseResult(item);
                     break;
-
-                case 3: // } 카드 사용
-                    gameView.showMessage("혹시 이거라면...?");
-                    gameView.waitForEnter();
-                    return BattleResult.BRACKET_WIN;
             }
 
             // minHealth=1로 설정된 보스는 실질적으로 사망하지 않음
