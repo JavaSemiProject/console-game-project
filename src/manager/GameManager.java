@@ -121,11 +121,35 @@ public class GameManager {
                 "ENEMY_ATK", 0, name + "의 공격", null, null, 0);
     }
 
+    // ============================================
+    // 도감 로깅 헬퍼
+    // ============================================
+    private final dao.CollectionDAO collectionDAO = new dao.CollectionDAO();
+
+    private void logCard(String cId) {
+        int t = stageManager.getCurrentTryNum();
+        if (t > 0) collectionDAO.logCard(cId, t);
+    }
+
+    private void logItem(String iId) {
+        int t = stageManager.getCurrentTryNum();
+        if (t > 0) collectionDAO.logItem(iId, t);
+    }
+
+    private void logNpc(String nId) {
+        int t = stageManager.getCurrentTryNum();
+        if (t > 0) collectionDAO.logNpc(nId, t);
+    }
+
+    // ============================================
+    // 헬퍼: 카드 획득 (DB에서 로드 + 도감 로그)
+    // ============================================
     private void awardCardFromDB(String cardId) {
         Card card = new CardDAO().findById(cardId);
         if (card != null) {
             playerCards.add(card);
             gameView.showAcquire(card.getCName());
+            logCard(cardId);
         }
     }
 
@@ -138,6 +162,8 @@ public class GameManager {
         NPC npc = stageManager.getNpcById(npcId);
         if (npc == null) return BattleResult.WIN;
 
+        logNpc(npcId);  // 조우 로그
+
         Card npcCard = createEnemyCard(npc.getNName());
         BattleResult br = battleManager.startBattle(
                 hero, npc, npc.getNName(), playerCards, playerItems, npcCard);
@@ -145,11 +171,19 @@ public class GameManager {
         if (br == BattleResult.WIN) {
             if (npc.getCId() != null) {
                 Card drop = new CardDAO().findById(npc.getCId());
-                if (drop != null) { playerCards.add(drop); gameView.showAcquire(drop.getCName()); }
+                if (drop != null) {
+                    playerCards.add(drop);
+                    gameView.showAcquire(drop.getCName());
+                    logCard(npc.getCId());
+                }
             }
             if (npc.getIId() != null) {
                 Item dropItem = new ItemDAO().findById(npc.getIId());
-                if (dropItem != null) { playerItems.add(dropItem); gameView.showAcquire(dropItem.getIName()); }
+                if (dropItem != null) {
+                    playerItems.add(dropItem);
+                    gameView.showAcquire(dropItem.getIName());
+                    logItem(npc.getIId());
+                }
             }
         } else if (br == BattleResult.LOSE) {
             state = GameState.GAME_OVER;
@@ -171,10 +205,12 @@ public class GameManager {
      */
     private boolean bossBattleLoop(int floorLevel, String prefix, String startTag, String winTag,
                                    String bossId, String bossName, int hp, int atkMin, int atkMax,
-                                   int bossPp, model.Stage lastPos) {
+                                   int bossPp, model.Stage lastPos, String nDbId) {
 
+        boolean loggedNpc = false;
         while (true) {
             showDialogue(prefix, startTag);
+            if (!loggedNpc) { logNpc(nDbId); loggedNpc = true; }
             NPC boss = createBoss(bossId, bossName, hp, atkMin, atkMax, bossPp);
             Card bossCard = createEnemyCard(bossName);
             BattleResult result = battleManager.startBattle(
@@ -297,6 +333,7 @@ public class GameManager {
                 50, false, 5, 8, 0, "C002"); // 혜진: 진=받침ㄴ → pp=0
         Card hyejinCard = createEnemyCard("혜진");
 
+        logNpc("n2");  // 혜진 조우 로그
         BattleResult result = battleManager.startHyejinBattle(
                 hero, hyejin, "혜진", playerCards, playerItems, hyejinCard);
 
@@ -353,6 +390,7 @@ public class GameManager {
                 if (semicolonCard != null) {
                     semicolonCard.setCombatUsable(false);
                     playerCards.add(semicolonCard);
+                    logCard("c3");
                 }
                 gameView.showAcquire("; (세미콜론)");
                 result.getCurrentPos().consume();
@@ -364,7 +402,7 @@ public class GameManager {
 
         // 미주 보스전 (미주: 주=모음 → pp=1)
         if (!bossBattleLoop(2, "floor2", "battle_boss_start", "battle_boss_win",
-                "B002", "미주", 70, 8, 12, 1, lastPos)) return;
+                "B002", "미주", 70, 8, 12, 1, lastPos, "n4")) return;
 
         awardCardFromDB("c4");
 
@@ -417,7 +455,7 @@ public class GameManager {
 
         // 솔민 보스전 (솔민: 민=받침ㄴ → pp=0)
         if (!bossBattleLoop(3, "floor3", "battle_boss_start", "battle_boss_win",
-                "B003", "솔민", 85, 10, 14, 0, lastPos)) return;
+                "B003", "솔민", 85, 10, 14, 0, lastPos, "n5")) return;
 
         awardCardFromDB("c5");
 
@@ -453,6 +491,7 @@ public class GameManager {
                 if (suspectResult == EventResult.START_BATTLE) {
                     showDialogue("floor4", "suspect_sunhyuk");
 
+                    logNpc("n3");  // 선혁 조우 로그
                     NPC sunhyuk = new NPC("N002", "선혁",
                             "같이 코드 세계에 갇힌 동료.", 60, false, 8, 12, 0, null);
                     Card sunhyukCard = createEnemyCard("선혁");
@@ -475,7 +514,7 @@ public class GameManager {
 
         // 제석 보스전 (제석: 석=받침ㄱ → pp=0)
         if (!bossBattleLoop(4, "floor4", "battle_boss_start", "battle_boss_win",
-                "B004", "제석", 100, 12, 16, 0, lastPos)) return;
+                "B004", "제석", 100, 12, 16, 0, lastPos, "n6")) return;
 
         awardCardFromDB("c6");
 
@@ -511,7 +550,7 @@ public class GameManager {
 
         // 수지 보스전 (수지: 지=모음 → pp=1)
         if (!bossBattleLoop(5, "floor5", "battle_boss_start", "battle_boss_win",
-                "B005", "수지", 110, 14, 18, 1, lastPos)) return;
+                "B005", "수지", 110, 14, 18, 1, lastPos, "n7")) return;
 
         awardCardFromDB("c7");
 
@@ -545,6 +584,7 @@ public class GameManager {
             if (EventManager.CACHE_BATTLE.equals(eid)) {
                 showDialogue("floor6", "cache_battle");
                 NPC cache = stageManager.getNpcById("n12");
+                logNpc("n12");  // 캐시 조우 로그
                 Card cacheCard = createEnemyCard(cache.getNName());
                 BattleResult cacheResult = battleManager.startCacheBattle(
                         hero, cache, cache.getNName(), playerCards, playerItems, cacheCard);
@@ -555,7 +595,11 @@ public class GameManager {
                 } else if (cacheResult == BattleResult.WIN) {
                     showDialogue("floor6", "cache_battle_win");
                     Item drop = new ItemDAO().findById("i6");
-                    if (drop != null) { playerItems.add(drop); gameView.showAcquire(drop.getIName()); }
+                    if (drop != null) {
+                        playerItems.add(drop);
+                        gameView.showAcquire(drop.getIName());
+                        logItem("i6");
+                    }
                 } else {
                     // ENEMY_FLED or FLEE
                     showDialogue("floor6", "cache_battle_lose");
@@ -569,7 +613,7 @@ public class GameManager {
 
         // 봉민 보스전 (봉민: 민=받침ㄴ → pp=0)
         if (!bossBattleLoop(6, "floor6", "battle_boss_start", "battle_boss_win",
-                "B006", "봉민", 130, 16, 20, 0, lastPos)) return;
+                "B006", "봉민", 130, 16, 20, 0, lastPos, "n8")) return;
 
         awardCardFromDB("c8");
 
@@ -631,8 +675,10 @@ public class GameManager {
         String startTag = hyejinRoute ? "battle_boss_start_with_hyejin" : "battle_boss_start_without_hyejin";
         String winTag = hyejinRoute ? "battle_boss_win_with_hyejin" : "battle_boss_win_without_hyejin";
 
+        boolean loggedNpc = false;
         while (true) {
             showDialogue("floor7", startTag);
+            if (!loggedNpc) { logNpc("n9"); loggedNpc = true; }
             NPC minjung = createBoss("B007", "민중", 150, 18, 24, 0); // 민중: 중=받침ㄱ → pp=0
             Card minjungCard = createEnemyCard("민중");
             BattleResult result = battleManager.startBattle(
@@ -668,6 +714,7 @@ public class GameManager {
             hyejinRoute = true;
             showDialogue("heap", "hyejin_route");
 
+            logNpc("n13");  // GC 조우 로그
             NPC gc = new NPC("M_GC", "GC",
                     "가비지 컬렉터. 더 이상 참조되지 않는 것들을 수거한다.",
                     80, false, 14, 20, 1, null);
@@ -720,6 +767,7 @@ public class GameManager {
             showDialogue("floor8", "story_without_hyejin");
         }
 
+        logNpc("n11");  // 딸깍이 조우 로그
         // 딸깍이: HP 9999 / minHealth=1 (물리적으로 처치 불가), 강력한 공격
         NPC ddalkkagi = createBoss("B_FINAL", "딸깍이", 9999, 50, 80, 0);
         ddalkkagi.setMinHealth(1);

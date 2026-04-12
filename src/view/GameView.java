@@ -587,6 +587,57 @@ public class GameView {
         return showChoice("카드 도감", "아이템 도감", "보스 도감", "엔딩 도감", "돌아가기");
     }
 
+    /**
+     * 도감 목록 표시 (번호 선택 → 상세 보기).
+     * @return 선택한 항목 index (0-based), -1이면 뒤로가기
+     */
+    public int showCollectionList(String title, List<CollectionEntry> entries) {
+        clearScreen();
+        System.out.println("=== " + title + " ===");
+        for (int i = 0; i < entries.size(); i++) {
+            CollectionEntry e = entries.get(i);
+            if (e.isFound()) {
+                System.out.printf(" %2d. [%s] — %d회차 최초 발견 (%d회)%n",
+                        i + 1, e.getName(), e.getFirstTry(), e.getCount());
+            } else {
+                System.out.printf(" %2d. [???]%n", i + 1);
+            }
+        }
+        System.out.println("  0. 뒤로가기");
+        System.out.print(">> ");
+        while (true) {
+            String input = readKey();
+            if ("0".equals(input)) return -1;
+            try {
+                int n = Integer.parseInt(input);
+                if (n >= 1 && n <= entries.size()) return n - 1;
+            } catch (NumberFormatException ignored) {}
+            System.out.print("0~" + entries.size() + " 중에 선택해주세요.\n>> ");
+        }
+    }
+
+    /** 도감 상세 표시 (name, desc, img). img가 null이면 생략. */
+    public void showCollectionDetail(String name, String desc, String img) {
+        clearScreen();
+        System.out.println("=== " + name + " ===");
+        System.out.println();
+        if (desc != null && !desc.isBlank()) {
+            System.out.println(desc);
+        }
+        if (img != null && !img.isBlank()) {
+            System.out.println();
+            System.out.println(img);
+        }
+        System.out.println();
+        waitForEnter();
+    }
+
+    /** 미발견 항목 상세 시도 시 표시 */
+    public void showCollectionLocked() {
+        System.out.println("\n[???] 아직 발견하지 못한 항목입니다.");
+        waitForEnter();
+    }
+
     // ============================================
     // 시스템 메시지
     // ============================================
