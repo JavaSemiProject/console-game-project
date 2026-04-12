@@ -591,4 +591,10 @@ public class GameView {
         printSlow("──────────────────────────────", 20);
         System.out.println();
     }
+
+    /** 엔딩 이미지(e_img) 출력 */
+    public void showEndingImage(String img) {
+        if (img == null || img.isBlank()) return;
+        System.out.println(img);
+    }
 }

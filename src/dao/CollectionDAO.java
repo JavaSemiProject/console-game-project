@@ -71,6 +71,20 @@ public class CollectionDAO {
     }
   }
 
+  public String findEImg(String eId) {
+    String sql = "SELECT e_img FROM ending WHERE e_id = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+      pstmt.setString(1, eId);
+      try (ResultSet rs = pstmt.executeQuery()) {
+        if (rs.next()) return rs.getString("e_img");
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
   public int getTotalEndingCount() {
     String sql = "SELECT COUNT(*) FROM ending";
     try (Connection conn = DBConnection.getConnection();

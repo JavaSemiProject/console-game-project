@@ -758,6 +758,10 @@ public class GameManager {
             default:           endingName = endingType; endingEId = null; break;
         }
         gameView.showEndingTitle(endingName);
+        if (endingEId != null) {
+            String img = new dao.CollectionDAO().findEImg(endingEId);
+            gameView.showEndingImage(img);
+        }
         gameView.waitForEnter();
 
         // 엔딩 DB 저장
