@@ -454,7 +454,6 @@ public class GameView {
         System.out.println("==========================");
         System.out.println(floor.getFloorLevel() + "층: " + theme);
         System.out.println("==========================");
-        System.out.println("[DEBUG] " + currentPos.getColumn() + "_" + currentPos.getRow());
         System.out.println("이동: w(상) a(좌) s(하) d(우)  |  i: 인벤토리");
     }
     /** s_type → 맵 심볼 변환 */
