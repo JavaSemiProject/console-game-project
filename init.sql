@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 DROP DATABASE IF EXISTS console_game;
 CREATE DATABASE console_game;
 USE console_game;
@@ -19,14 +21,14 @@ create table particle( -- 조사 테이블
                          sound_lg char(3) not null, -- 이, 가
                          sound_er varchar(3) not null, -- 을, 를
                          sound_en varchar(3) not null -- 은 는
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table ending ( -- 엔딩 목록 테이블
                         e_id varchar(10) primary key, -- 엔딩 id
                         e_name varchar(50) not null unique, -- 엔딩명
                         e_desc varchar(500) not null, -- 엔딩 설명
                         e_img text -- 엔딩 이미지
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table card( -- 카드 목록 테이블 (모든 카드의 기본 데이터)
                      c_id varchar(10) primary key, -- 카드 id
@@ -37,7 +39,8 @@ create table card( -- 카드 목록 테이블 (모든 카드의 기본 데이터
                      c_use_msg varchar(500) not null unique, -- 카드 사용시 출력 물
                      c_img varchar(2000), -- 카드 수집시 보여줄 출력물
                      foreign key (pp) references particle(pp)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 create table item( -- 아이템 목록 테이블 (모든 아이템의 기본 데이터)
                      i_id varchar(10) primary key, -- 아이템 id
@@ -50,7 +53,7 @@ create table item( -- 아이템 목록 테이블 (모든 아이템의 기본 데
                      i_desc varchar(500) not null, -- 아이템에 대한 설명
                      i_img varchar(2000) not null, -- 아이템 이미지
                      foreign key (pp) references particle(pp)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table npc( -- 게임에 나올 모든 캐릭터 및 몹 리스트
                     n_id varchar(10) primary key, -- npc id
@@ -66,7 +69,7 @@ create table npc( -- 게임에 나올 모든 캐릭터 및 몹 리스트
                     foreign key (pp) references particle(pp),
                     foreign key (c_id) references card(c_id),
                     foreign key (i_id) references item(i_id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table stage( -- 맵 테이블
                       s_id varchar(10) primary key, -- 맵의 id (좌표 형식 : 층_가로세로)
@@ -77,8 +80,7 @@ create table stage( -- 맵 테이블
                       s_prob double not null, -- 맵 타입의 발동 확률(몹이나 이벤트 발생 확률)
                       n_id varchar(10), -- 맵에 나올 몹 번호
                       foreign key (n_id) references npc(n_id)
-);
-
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table save( -- 세이브 로그 테이블
                      t_id varchar(10), -- 세이브 ID
@@ -86,7 +88,7 @@ create table save( -- 세이브 로그 테이블
                      s_id varchar(10), -- 스테이지 ID
                      t_time timestamp default current_timestamp, -- 데이터 저장 시각
                      foreign key (s_id) references stage(s_id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table c_save( -- 카드 습득 로그 테이블 (컬렉션 반영할 테이블)
                        c_id varchar(10), -- 카드 번호
@@ -94,7 +96,7 @@ create table c_save( -- 카드 습득 로그 테이블 (컬렉션 반영할 테�
                        c_count int, -- 카드 획득 횟수 카운트
                        foreign key (c_id) references card(c_id),
                        foreign key (try) references save(try)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table i_save( -- 아이템 습득 로그 테이블 (컬렉션 반영할 테이블)
                        i_id varchar(10), -- 아이템 번호
@@ -102,7 +104,7 @@ create table i_save( -- 아이템 습득 로그 테이블 (컬렉션 반영할 �
                        i_count int, -- 아이템 획득 횟수 카운트
                        foreign key (i_id) references item(i_id),
                        foreign key (try) references save(try)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table e_save( -- 엔딩 해금 로그 테이블 (컬렉션 반영할 테이블)
                        e_id varchar(10), -- 엔딩 번호
@@ -110,7 +112,7 @@ create table e_save( -- 엔딩 해금 로그 테이블 (컬렉션 반영할 테�
                        e_count int, -- 엔딩 해금 횟수 카운트
                        foreign key (e_id) references ending(e_id),
                        foreign key (try) references save(try)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table n_save( -- NPC 만남 로그 테이블 (컬렉션 반영할 테이블)
                        n_id varchar(10), -- NPC 번호
@@ -118,7 +120,7 @@ create table n_save( -- NPC 만남 로그 테이블 (컬렉션 반영할 테이�
                        n_count int, -- NPC 만남 횟수 카운트
                        foreign key (n_id) references npc(n_id),
                        foreign key (try) references save(try)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO particle (pp, sound_lg, sound_er, sound_en) VALUES (0, '이', '을', '은');
 INSERT INTO particle (pp, sound_lg, sound_er, sound_en) VALUES (1, '가', '를', '는');
@@ -231,24 +233,24 @@ INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES 
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('1_a5', 5, 'a', 1, 'finish', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a1', 1, 'a', 2, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a2', 2, 'a', 2, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a3', 3, 'a', 2, 'npc_i', 0, 'n41');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a3', 3, 'a', 2, 'npc_i', 50, 'n41');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a4', 4, 'a', 2, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_a5', 5, 'a', 2, 'finish', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b1', 1, 'b', 2, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b2', 2, 'b', 2, 'npc_i', 0, 'n14');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b2', 2, 'b', 2, 'npc_i', 50, 'n14');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b3', 3, 'b', 2, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b4', 4, 'b', 2, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b5', 5, 'b', 2, 'npc_i', 0, 'n19');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c1', 1, 'c', 2, 'npc_i', 0, 'n46');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_b5', 5, 'b', 2, 'npc_i', 50, 'n19');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c1', 1, 'c', 2, 'npc_i', 50, 'n46');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c2', 2, 'c', 2, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c3', 3, 'c', 2, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c4', 4, 'c', 2, 'npc_i', 0, 'n42');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c4', 4, 'c', 2, 'npc_i', 50, 'n42');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_c5', 5, 'c', 2, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d1', 1, 'd', 2, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d2', 2, 'd', 2, 'npc_i', 0, 'n15');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d3', 3, 'd', 2, 'npc_i', 0, 'n51');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d2', 2, 'd', 2, 'npc_i', 50, 'n15');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d3', 3, 'd', 2, 'npc_i', 50, 'n51');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d4', 4, 'd', 2, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d5', 5, 'd', 2, 'npc_i', 0, 'n18');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_d5', 5, 'd', 2, 'npc_i', 50, 'n18');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_e1', 1, 'e', 2, 'event_semicolon', 0, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_e2', 2, 'e', 2, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_e3', 3, 'e', 2, 'w', 100, null);
@@ -256,128 +258,128 @@ INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES 
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('2_e5', 5, 'e', 2, 'event_comment', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a1', 1, 'a', 3, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a2', 2, 'a', 3, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a3', 3, 'a', 3, 'npc_i', 0, 'n17');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a4', 4, 'a', 3, 'npc_i', 0, 'n41');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a3', 3, 'a', 3, 'npc_i', 50, 'n17');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a4', 4, 'a', 3, 'npc_i', 50, 'n41');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_a5', 5, 'a', 3, 'finish', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b1', 1, 'b', 3, 'npc_i', 0, 'n46');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b1', 1, 'b', 3, 'npc_i', 50, 'n46');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b2', 2, 'b', 3, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b3', 3, 'b', 3, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b4', 4, 'b', 3, 'npc_i', 0, 'n20');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b4', 4, 'b', 3, 'npc_i', 50, 'n20');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_b5', 5, 'b', 3, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c1', 1, 'c', 3, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c2', 2, 'c', 3, 'npc_i', 0, 'n16');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c2', 2, 'c', 3, 'npc_i', 50, 'n16');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c3', 3, 'c', 3, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c4', 4, 'c', 3, 'npc_i', 0, 'n54');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c4', 4, 'c', 3, 'npc_i', 50, 'n54');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_c5', 5, 'c', 3, 'event_engine', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d1', 1, 'd', 3, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d2', 2, 'd', 3, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d3', 3, 'd', 3, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d4', 4, 'd', 3, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d5', 5, 'd', 3, 'npc_i', 0, 'n28');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e1', 1, 'e', 3, 'npc_i', 0, 'n52');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_d5', 5, 'd', 3, 'npc_i', 50, 'n28');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e1', 1, 'e', 3, 'npc_i', 50, 'n52');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e2', 2, 'e', 3, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e3', 3, 'e', 3, 'npc_i', 0, 'n27');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e3', 3, 'e', 3, 'npc_i', 50, 'n27');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e4', 4, 'e', 3, 'event_door', 0, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('3_e5', 5, 'e', 3, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a1', 1, 'a', 4, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a2', 2, 'a', 4, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a3', 3, 'a', 4, 'npc_i', 0, 'n48');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a4', 4, 'a', 4, 'npc_i', 0, 'n21');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a3', 3, 'a', 4, 'npc_i', 50, 'n48');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a4', 4, 'a', 4, 'npc_i', 50, 'n21');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_a5', 5, 'a', 4, 'finish', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b1', 1, 'b', 4, 'npc_i', 0, 'n51');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b1', 1, 'b', 4, 'npc_i', 50, 'n51');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b2', 2, 'b', 4, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b3', 3, 'b', 4, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b4', 4, 'b', 4, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_b5', 5, 'b', 4, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c1', 1, 'c', 4, 'npc_i', 0, 'n23');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c1', 1, 'c', 4, 'npc_i', 50, 'n23');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c2', 2, 'c', 4, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c3', 3, 'c', 4, 'event_betrayal', 0, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c4', 4, 'c', 4, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c5', 5, 'c', 4, 'npc_i', 0, 'n22');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d1', 1, 'd', 4, 'npc_i', 0, 'n41');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_c5', 5, 'c', 4, 'npc_i', 50, 'n22');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d1', 1, 'd', 4, 'npc_i', 50, 'n41');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d2', 2, 'd', 4, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d3', 3, 'd', 4, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d4', 4, 'd', 4, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d5', 5, 'd', 4, 'npc_i', 0, 'n52');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_d5', 5, 'd', 4, 'npc_i', 50, 'n52');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e1', 1, 'e', 4, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e2', 2, 'e', 4, 'npc_i', 0, 'n24');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e2', 2, 'e', 4, 'npc_i', 50, 'n24');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e3', 3, 'e', 4, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e4', 4, 'e', 4, 'npc_i', 0, 'n43');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e4', 4, 'e', 4, 'npc_i', 50, 'n43');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('4_e5', 5, 'e', 4, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_a1', 1, 'a', 5, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_a2', 2, 'a', 5, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_a3', 3, 'a', 5, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_a4', 4, 'a', 5, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_a5', 5, 'a', 5, 'finish', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b1', 1, 'b', 5, 'npc_i', 0, 'n25');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b1', 1, 'b', 5, 'npc_i', 50, 'n25');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b2', 2, 'b', 5, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b3', 3, 'b', 5, 'npc_i', 0, 'n47');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b3', 3, 'b', 5, 'npc_i', 50, 'n47');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b4', 4, 'b', 5, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b5', 5, 'b', 5, 'npc_i', 0, 'n46');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_b5', 5, 'b', 5, 'npc_i', 50, 'n46');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c1', 1, 'c', 5, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c2', 2, 'c', 5, 'npc_i', 0, 'n30');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c2', 2, 'c', 5, 'npc_i', 50, 'n30');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c3', 3, 'c', 5, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c4', 4, 'c', 5, 'npc_i', 0, 'n26');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c4', 4, 'c', 5, 'npc_i', 50, 'n26');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_c5', 5, 'c', 5, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d1', 1, 'd', 5, 'npc_i', 0, 'n44');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d1', 1, 'd', 5, 'npc_i', 50, 'n44');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d2', 2, 'd', 5, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d3', 3, 'd', 5, 'npc_i', 0, 'n42');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d3', 3, 'd', 5, 'npc_i', 50, 'n42');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d4', 4, 'd', 5, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_d5', 5, 'd', 5, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e1', 1, 'e', 5, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e2', 2, 'e', 5, 'npc_i', 0, 'n31');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e2', 2, 'e', 5, 'npc_i', 50, 'n31');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e3', 3, 'e', 5, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e4', 4, 'e', 5, 'npc_i', 0, 'n29');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e5', 5, 'e', 5, 'npc_i', 100, 'n49');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e4', 4, 'e', 5, 'npc_i', 50, 'n29');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('5_e5', 5, 'e', 5, 'npc_i', 5100, 'n49');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a1', 1, 'a', 6, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a2', 2, 'a', 6, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a3', 3, 'a', 6, 'npc_i', 0, 'n47');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a3', 3, 'a', 6, 'npc_i', 50, 'n47');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a4', 4, 'a', 6, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_a5', 5, 'a', 6, 'finish', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b1', 1, 'b', 6, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b2', 2, 'b', 6, 'npc_i', 0, 'n46');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b2', 2, 'b', 6, 'npc_i', 50, 'n46');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b3', 3, 'b', 6, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b4', 4, 'b', 6, 'npc_i', 0, 'n48');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b5', 5, 'b', 6, 'npc_i', 0, 'n36');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b4', 4, 'b', 6, 'npc_i', 50, 'n48');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_b5', 5, 'b', 6, 'npc_i', 50, 'n36');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c1', 1, 'c', 6, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c2', 2, 'c', 6, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c3', 3, 'c', 6, 'npc_i', 0, 'n32');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c3', 3, 'c', 6, 'npc_i', 50, 'n32');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c4', 4, 'c', 6, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_c5', 5, 'c', 6, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d1', 1, 'd', 6, 'npc_i', 0, 'n52');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d1', 1, 'd', 6, 'npc_i', 50, 'n52');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d2', 2, 'd', 6, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d3', 3, 'd', 6, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d4', 4, 'd', 6, 'npc_i', 0, 'n37');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d5', 5, 'd', 6, 'npc_i', 0, 'n42');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d4', 4, 'd', 6, 'npc_i', 50, 'n37');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_d5', 5, 'd', 6, 'npc_i', 50, 'n42');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e1', 1, 'e', 6, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e2', 2, 'e', 6, 'npc_i', 0, 'n33');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e3', 3, 'e', 6, 'npc_i', 0, 'n54');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e2', 2, 'e', 6, 'npc_i', 50, 'n33');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e3', 3, 'e', 6, 'npc_i', 50, 'n54');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e4', 4, 'e', 6, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('6_e5', 5, 'e', 6, 'event_cache', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a1', 1, 'a', 7, 'start', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a2', 2, 'a', 7, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a3', 3, 'a', 7, 'npc_i', 0, 'n53');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a3', 3, 'a', 7, 'npc_i', 50, 'n53');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a4', 4, 'a', 7, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a5', 5, 'a', 7, 'npc_i', 0, 'n45');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b1', 1, 'b', 7, 'npc_i', 0, 'n50');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_a5', 5, 'a', 7, 'npc_i', 50, 'n45');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b1', 1, 'b', 7, 'npc_i', 50, 'n50');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b2', 2, 'b', 7, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b3', 3, 'b', 7, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b4', 4, 'b', 7, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b5', 5, 'b', 7, 'npc_i', 0, 'n35');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c1', 1, 'c', 7, 'npc_i', 0, 'n38');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_b5', 5, 'b', 7, 'npc_i', 50, 'n35');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c1', 1, 'c', 7, 'npc_i', 50, 'n38');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c2', 2, 'c', 7, 'v', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c3', 3, 'c', 7, 'npc_i', 0, 'n39');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c3', 3, 'c', 7, 'npc_i', 50, 'n39');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c4', 4, 'c', 7, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_c5', 5, 'c', 7, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d1', 1, 'd', 7, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d2', 2, 'd', 7, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d3', 3, 'd', 7, 'w', 100, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d4', 4, 'd', 7, 'npc_i', 0, 'n40');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d4', 4, 'd', 7, 'npc_i', 50, 'n40');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_d5', 5, 'd', 7, 'w', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e1', 1, 'e', 7, 'event_heap', 0, null);
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e2', 2, 'e', 7, 'npc_i', 0, 'n55');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e3', 3, 'e', 7, 'npc_i', 0, 'n34');
-INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e4', 4, 'e', 7, 'npc_i', 0, 'n43');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e2', 2, 'e', 7, 'npc_i', 50, 'n55');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e3', 3, 'e', 7, 'npc_i', 50, 'n34');
+INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e4', 4, 'e', 7, 'npc_i', 50, 'n43');
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('7_e5', 5, 'e', 7, 'finish', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('heap_a1', 0, '1', 0, 'v', 100, null);
 INSERT INTO stage (s_id, s_row, s_column, f_level, s_type, s_prob, n_id) VALUES ('heap_a2', 0, '2', 0, 'start', 100, null);
