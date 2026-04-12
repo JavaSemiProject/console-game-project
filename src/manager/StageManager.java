@@ -98,6 +98,7 @@ public class StageManager {
       case "event_betrayal":  return EventManager.SUSPECT_SUNHYUK;
       case "event_cache":     return EventManager.CACHE_BATTLE;
       case "event_heap":      return EventManager.HEAP_ENTRY;
+      case "event_engine":    return EventManager.INTERPRETER_ROBOT;
       default: return null;
     }
   }
@@ -238,9 +239,15 @@ public class StageManager {
 
     Stage prevPos = currentPos;
     autoSaveIfStart(currentPos, gameView);
+    String statusMessage = null;
 
     while (true) {
       gameView.showMap(floor, currentPos);
+      if (statusMessage != null) {
+        System.out.println(statusMessage);
+        System.out.flush();
+        statusMessage = null;
+      }
       String input = gameView.getMovementInput();
 
       if ("i".equals(input)) {
@@ -315,6 +322,11 @@ public class StageManager {
                 eventId, prevPos, currentPos);
           }
         }
+      }
+
+      // 이벤트/NPC 없이 이동만 한 경우 (빈 공간) — 다음 맵 렌더 후 표시
+      if (!"start".equals(sType)) {
+        statusMessage = gameView.getRandomVoidMessage();
       }
     }
   }

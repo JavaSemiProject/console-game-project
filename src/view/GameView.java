@@ -5,6 +5,7 @@ import model.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class GameView {
@@ -15,6 +16,10 @@ public class GameView {
         this.scanner = scanner;
     }
 
+    private String readKey() {
+        return scanner.nextLine().trim().toLowerCase();
+    }
+
     // ============================================
     // 화면 제어
     // ============================================
@@ -22,7 +27,11 @@ public class GameView {
     /** 콘솔 화면 클리어 */
     public void clearScreen() {
         try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            new ProcessBuilder("cmd", "/c", "cls")
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
+                .waitFor();
         } catch (Exception e) {
             // cmd 실행 불가 시 ANSI 폴백
             System.out.print("\033[3J\033[2J\033[H");
@@ -33,8 +42,8 @@ public class GameView {
     /** Enter 입력 대기. 's' 입력 시 true 반환 (스킵 요청) */
     public boolean waitForEnter() {
         System.out.println("\n[ Enter: 계속 ]");
-        String input = scanner.nextLine().trim().toLowerCase();
-        return input.equals("s");
+        String input = readKey();
+        return "s".equals(input);
     }
 
     /** 버퍼에 쌓인 입력을 비운다 */
@@ -152,7 +161,7 @@ public class GameView {
         System.out.print("\n>> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int choice = Integer.parseInt(input);
                 if (choice >= 1 && choice <= options.length) {
@@ -225,7 +234,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             switch (input) {
                 case "1": return 1;
                 case "2": return 2;
@@ -256,7 +265,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int idx = Integer.parseInt(input);
                 if (idx == 0) return 0;
@@ -282,7 +291,7 @@ public class GameView {
         System.out.print(">> ");
 
         while (true) {
-            String input = scanner.nextLine().trim();
+            String input = readKey();
             try {
                 int idx = Integer.parseInt(input);
                 if (idx == 0) return 0;
@@ -425,51 +434,27 @@ public class GameView {
         System.out.println("이동: w(상) a(좌) s(하) d(우)");*/
 
         clearScreen();
-        System.out.println(floor.getFloorLevel() + "층 - 현재 위치: "
-            + currentPos.getColumn() + "_" + currentPos.getRow());
-        System.out.println();
-
-// 범례
-        System.out.println("  @ 현재위치  N 몬스터  I 아이템  E 이벤트  F 출구  S 시작");
-        System.out.println();
-
-// 열 헤더 (a~e)
-        System.out.print("      ");
-        char[] colLabels = {'a', 'b', 'c', 'd', 'e'};
-        for (char c : colLabels) {
-            System.out.print("  " + c + "  ");
-        }
-        System.out.println();
-
-// 행 (1~5)
-        for (int r = 1; r <= 5; r++) {
-            final int currentRow = r;
-            System.out.print("  " + r + "  ");
-            for (char c : colLabels) {
-                final String currentCol = String.valueOf(c);
-                boolean isHere = currentPos.getRow() == currentRow
-                    && currentPos.getColumn().equals(currentCol);
-
-                if (isHere) {
-                    System.out.print("[ @ ]");
-                } else {
-                    Stage s = floor.getStages().stream()
-                        .filter(st -> st.getRow() == currentRow
-                            && st.getColumn().equals(currentCol))
-                        .findFirst()
-                        .orElse(null);
-
-                    String symbol = getSymbol(s);
-                    System.out.print("[ " + symbol + " ]");
-                }
-            }
-            System.out.println();
-        }
-
-        System.out.println();
+        String theme = getFloorTheme(floor.getFloorLevel());
+        System.out.println("==========================");
+        System.out.println(floor.getFloorLevel() + "층: " + theme);
+        System.out.println("==========================");
+        System.out.println("[DEBUG] " + currentPos.getColumn() + "_" + currentPos.getRow());
         System.out.println("이동: w(상) a(좌) s(하) d(우)  |  i: 인벤토리");
     }
     /** s_type → 맵 심볼 변환 */
+    private String getFloorTheme(int level) {
+        switch (level) {
+            case 2: return "숲";
+            case 3: return "들판";
+            case 4: return "사막";
+            case 5: return "강물";
+            case 6: return "심해";
+            case 7: return "화산";
+            case 8: return "쓰레기장";
+            default: return level + "층";
+        }
+    }
+
     private String getSymbol(Stage s) {
         if (s == null) return "?";
         if (s.getS_type() == null) return ".";
@@ -489,7 +474,7 @@ public class GameView {
     /** 이동 입력 받기 */
     public String getMovementInput() {
         System.out.print(">> ");
-        return scanner.nextLine().trim().toLowerCase();
+        return readKey();
     }
 
     /** 탐색 중 인벤토리 조회 (읽기 전용) */
@@ -523,12 +508,25 @@ public class GameView {
 
         System.out.println("\n==============================");
         System.out.println("[ Enter: 돌아가기 ]");
-        scanner.nextLine();
+        readKey();
     }
 
-    /** 맵 경고 메시지 (경계 밖 이동 등) */
+    /** 맵 경고 메시지 (벽, 경계 밖 이동 등) — 확인 후 Enter 대기 */
     public void showMapAlert(String message) {
         System.out.println(message);
+        waitForEnter();
+    }
+
+    private static final String[] VOID_MESSAGES = {
+        "아무것도 없다...",
+        "조용하네...",
+        "먼지만 날린다..."
+    };
+    private static final Random VOID_RANDOM = new Random();
+
+    /** 빈 공간 랜덤 메시지 반환 (출력은 호출자 책임) */
+    public String getRandomVoidMessage() {
+        return VOID_MESSAGES[VOID_RANDOM.nextInt(VOID_MESSAGES.length)];
     }
 
     /** 층 이동 연출 */
