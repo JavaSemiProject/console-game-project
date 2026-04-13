@@ -98,7 +98,7 @@ public class GameManager {
         stageManager.buildFloorChain(8);
 
         if (createSave) {   // ← 이어하기 시엔 실행 안 됨
-            Save newSave = saveManager.createNewSave(2);
+            Save newSave = saveManager.createNewSave(2, playerCards, playerItems);
             if (newSave != null) {
                 stageManager.setCurrentTryNum(newSave.getTryNum());
                 System.out.println("[GameManager] tryNum 설정: " + newSave.getTryNum());
@@ -196,7 +196,7 @@ public class GameManager {
     }
 
     private void updateSaveFloor(int floorLevel) {
-        saveManager.updateSaveToFloor(floorLevel, stageManager.getCurrentTryNum());
+        saveManager.updateSaveToFloor(floorLevel, stageManager.getCurrentTryNum(), playerCards, playerItems);
     }
 
     /**
@@ -279,6 +279,15 @@ public class GameManager {
                 if (loaded != null) {
                     initGameData(false);  // 세이브 생성 없이 초기화만
                     stageManager.setCurrentTryNum(loaded.getTryNum());
+                    // 보유 카드/아이템 복원 (스냅샷이 비어있으면 초기 상태 유지)
+                    if (loaded.getCards() != null && !loaded.getCards().isEmpty()) {
+                        playerCards.clear();
+                        playerCards.addAll(loaded.getCards());
+                    }
+                    if (loaded.getItems() != null && !loaded.getItems().isEmpty()) {
+                        playerItems.clear();
+                        playerItems.addAll(loaded.getItems());
+                    }
                     GameState savedState = getStateFromSaveId(loaded.getLId());
                     gameView.showMessage("[이어하기] " + loaded.getSaveStatus());
                     gameView.waitForEnter();

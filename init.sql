@@ -4,6 +4,8 @@ DROP DATABASE IF EXISTS console_game;
 CREATE DATABASE console_game;
 USE console_game;
 
+DROP TABLE IF EXISTS c_inventory;
+DROP TABLE IF EXISTS i_inventory;
 DROP TABLE IF EXISTS c_save;
 DROP TABLE IF EXISTS i_save;
 DROP TABLE IF EXISTS e_save;
@@ -112,6 +114,22 @@ create table e_save( -- 엔딩 해금 로그 테이블 (컬렉션 반영할 테�
                        e_count int, -- 엔딩 해금 횟수 카운트
                        foreign key (e_id) references ending(e_id),
                        foreign key (try) references save(try)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+create table c_inventory( -- 세이브 시점 보유 카드 스냅샷
+                           c_id varchar(10),
+                           try int,
+                           slot int, -- 보유 순서 보존용
+                           foreign key (c_id) references card(c_id),
+                           foreign key (try) references save(try)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+create table i_inventory( -- 세이브 시점 보유 아이템 스냅샷
+                           i_id varchar(10),
+                           try int,
+                           slot int,
+                           foreign key (i_id) references item(i_id),
+                           foreign key (try) references save(try)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 create table n_save( -- NPC 만남 로그 테이블 (컬렉션 반영할 테이블)

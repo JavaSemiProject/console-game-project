@@ -27,6 +27,10 @@ public class SaveManager {
    * - start 스테이지 찾아서 DB INSERT + s_id UPDATE
    */
   public Save createNewSave(int floorLevel) {
+    return createNewSave(floorLevel, null, null);
+  }
+
+  public Save createNewSave(int floorLevel, List<Card> cards, List<Item> items) {
     Stage startStage = findStartStage(floorLevel);
     if (startStage == null) {
       System.err.println("[SaveManager] " + floorLevel + "층의 start 스테이지가 없습니다.");
@@ -40,8 +44,9 @@ public class SaveManager {
       return null;
     }
 
-    // 2. s_id UPDATE
+    // 2. s_id UPDATE + 인벤토리 스냅샷
     boolean saved = saveDAO.updateStage(startStage.getStageName(), tryNum);
+    saveDAO.saveInventory(tryNum, cards, items);
     System.out.println("[SaveManager] 새 게임 저장: "
         + startStage.getStageName()
         + " / tryNum=" + tryNum
@@ -51,8 +56,8 @@ public class SaveManager {
         startStage.getStageName(),
         tryNum,
         new Timestamp(System.currentTimeMillis()),
-        new ArrayList<>(),
-        new ArrayList<>()
+        cards != null ? new ArrayList<>(cards) : new ArrayList<>(),
+        items != null ? new ArrayList<>(items) : new ArrayList<>()
     );
   }
 
@@ -73,8 +78,9 @@ public class SaveManager {
 
   /**
    * 층 전환 시 세이브 갱신: 해당 층의 start 스테이지로 s_id 업데이트
+   * 보유 카드/아이템 스냅샷도 함께 저장.
    */
-  public void updateSaveToFloor(int floorLevel, int tryNum) {
+  public void updateSaveToFloor(int floorLevel, int tryNum, List<Card> cards, List<Item> items) {
     if (tryNum == -1) return;
     Stage startStage = findStartStage(floorLevel);
     if (startStage == null) {
@@ -82,8 +88,11 @@ public class SaveManager {
       return;
     }
     boolean saved = saveDAO.updateStage(startStage.getStageName(), tryNum);
+    saveDAO.saveInventory(tryNum, cards, items);
     System.out.println("[SaveManager] " + floorLevel + "층 세이브 갱신: "
-        + startStage.getStageName() + " / tryNum=" + tryNum + " / saved=" + saved);
+        + startStage.getStageName() + " / tryNum=" + tryNum + " / saved=" + saved
+        + " / cards=" + (cards == null ? 0 : cards.size())
+        + " / items=" + (items == null ? 0 : items.size()));
   }
 
   /**

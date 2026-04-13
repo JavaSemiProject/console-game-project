@@ -32,15 +32,15 @@ public class SaveDAO {
       ResultSet rs = pstmt.executeQuery();
       if (rs.next()) {
         int tryNum = rs.getInt("try");
-        List<Card> cards = new CardDAO().findAllByTry(tryNum);
-        List<Item> items = new ItemDAO().findAllByTry(tryNum);
+        List<Card> cards = loadInventoryCards(tryNum);
+        List<Item> items = loadInventoryItems(tryNum);
 
         return new Save(
             rs.getString("s_id"),
-            rs.getInt("try"),
+            tryNum,
             rs.getTimestamp("t_time"),
-            new ArrayList<>(),
-            new ArrayList<>()
+            cards,
+            items
         );
       }
     } catch (SQLException e) {
@@ -96,6 +96,91 @@ public class SaveDAO {
       e.printStackTrace();
     }
     return -1;
+  }
+
+  /**
+   * 보유 카드/아이템 스냅샷 저장 (DELETE 후 INSERT).
+   * c_save/i_save(컬렉션 로그)와는 별개의 인벤토리 스냅샷 테이블 사용.
+   */
+  public void saveInventory(int tryNum, List<Card> cards, List<Item> items) {
+    if (tryNum <= 0) return;
+    Connection conn = getConnection();
+    if (conn == null) return;
+    try (conn) {
+      conn.setAutoCommit(false);
+      try (PreparedStatement delC = conn.prepareStatement("DELETE FROM c_inventory WHERE `try` = ?");
+           PreparedStatement delI = conn.prepareStatement("DELETE FROM i_inventory WHERE `try` = ?")) {
+        delC.setInt(1, tryNum); delC.executeUpdate();
+        delI.setInt(1, tryNum); delI.executeUpdate();
+      }
+      if (cards != null && !cards.isEmpty()) {
+        try (PreparedStatement ps = conn.prepareStatement(
+            "INSERT INTO c_inventory (c_id, `try`, slot) VALUES (?, ?, ?)")) {
+          for (int i = 0; i < cards.size(); i++) {
+            ps.setString(1, cards.get(i).getCId());
+            ps.setInt(2, tryNum);
+            ps.setInt(3, i);
+            ps.addBatch();
+          }
+          ps.executeBatch();
+        }
+      }
+      if (items != null && !items.isEmpty()) {
+        try (PreparedStatement ps = conn.prepareStatement(
+            "INSERT INTO i_inventory (i_id, `try`, slot) VALUES (?, ?, ?)")) {
+          for (int i = 0; i < items.size(); i++) {
+            ps.setString(1, items.get(i).getIId());
+            ps.setInt(2, tryNum);
+            ps.setInt(3, i);
+            ps.addBatch();
+          }
+          ps.executeBatch();
+        }
+      }
+      conn.commit();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public List<Card> loadInventoryCards(int tryNum) {
+    List<Card> out = new ArrayList<>();
+    String sql = "SELECT c_id FROM c_inventory WHERE `try` = ? ORDER BY slot";
+    Connection conn = getConnection();
+    if (conn == null) return out;
+    try (conn; PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, tryNum);
+      try (ResultSet rs = ps.executeQuery()) {
+        CardDAO cardDAO = new CardDAO();
+        while (rs.next()) {
+          Card c = cardDAO.findById(rs.getString("c_id"));
+          if (c != null) out.add(c);
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return out;
+  }
+
+  public List<Item> loadInventoryItems(int tryNum) {
+    List<Item> out = new ArrayList<>();
+    String sql = "SELECT i_id FROM i_inventory WHERE `try` = ? ORDER BY slot";
+    Connection conn = getConnection();
+    if (conn == null) return out;
+    try (conn; PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, tryNum);
+      try (ResultSet rs = ps.executeQuery()) {
+        ItemDAO itemDAO = new ItemDAO();
+        while (rs.next()) {
+          Item it = itemDAO.findById(rs.getString("i_id"));
+          if (it != null) out.add(it);
+        }
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return out;
   }
 
   public String getLatestStage(int tryNum) {
