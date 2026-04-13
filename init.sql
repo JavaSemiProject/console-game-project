@@ -144,11 +144,11 @@ INSERT INTO particle (pp, sound_lg, sound_er, sound_en) VALUES (0, '이', '을',
 INSERT INTO particle (pp, sound_lg, sound_er, sound_en) VALUES (1, '가', '를', '는');
 
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c1', 'Scanner', 1, 0, '키보드 등에서 입력을 받을 때 사용하는 클래스.', '카드가 혜진이의 스킬을 흡수했다!', '이미지');
-INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c2', 'random', 0, 20, '난수를 생성할 때 사용하는 클래스 또는 메서드.', '어디선가 거대한 주사위가 굴러왔다!', '이미지');
+INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c2', 'random', 0, 35, '난수를 생성할 때 사용하는 클래스 또는 메서드.', '어디선가 거대한 주사위가 굴러왔다!', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c3', ';', 0, 0, '문장의 끝을 나타내는 기호.', '아무런 반응이 없다.', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c4', 'TreeNode', 1, 25, '트리 구조의 노드를 나타내는 클래스 이름으로 자주 쓰임.', '어딘가에서 ｀덩굴｀이 나타나 주변을 휘둘렀다!', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c5', 'while', 0, 22, '조건이 참인 동안 반복하는 반복문.', '카드에서 거대한 ｀풍차｀가 튀어나와 강한 바람을 날렸다!', '이미지');
-INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c6', 'if-else', 1, 30, '조건에 따라 코드 실행 경로를 바꾸는 제어문.', '카드에서 물음표들이 총알처럼 빠르게 나왔다!', '이미지');
+INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c6', 'if-else', 1, 45, '조건에 따라 코드 실행 경로를 바꾸는 제어문.', '카드에서 물음표들이 총알처럼 빠르게 나왔다!', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c7', 'new', 1, 30, '객체를 생성할 때 사용하는 키워드.', '카드에서 갖가지 모양의 ｀찰흙｀들을 던졌다!', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c8', 'sleep', 0, 29, '일정 시간 실행을 멈추는 메서드(java.lang.Thread의 static 메서드).', '어디선가 ｀양떼｀가 나타나 돌진했다!', '이미지');
 INSERT INTO card (c_id, c_name, pp, c_power, c_desc, c_use_msg, c_img) VALUES ('c9', 'class', 1, 23, '클래스를 정의할 때 사용하는 키워드.', '하늘에서 ｀교실 책상｀이 떨어져 강타했다!', '이미지');
@@ -190,7 +190,7 @@ INSERT INTO item (i_id, i_name, pp, hp, i_power, heal, i_use_msg, i_desc, i_img)
 INSERT INTO item (i_id, i_name, pp, hp, i_power, heal, i_use_msg, i_desc, i_img) VALUES ('i5', '리드불', 0, 0, 20, 0, '공격력을 10 증가 시켰습니다!', '밤을 새도록 리드 한다. 공격력을 10 증가시킨다.', '이미지');
 INSERT INTO item (i_id, i_name, pp, hp, i_power, heal, i_use_msg, i_desc, i_img) VALUES ('i6', '쓰다벅스 아아', 1, 100, 0, 100, '체력이 100 올랐습니다!', '쓰지만 커피의 근본. 체력을 100 올려준다', '이미지');
 
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n1', '영균', 0, 100, 10, 15, 'c1', null, 1, '머리가 나쁜편은 아니지만 게으르다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n1', '영균', 0, 100, 0, 0, 'c1', null, 1, '머리가 나쁜편은 아니지만 게으르다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n2', '혜진', 0, 100, 25, 30, 'c2', null, 1, '영균과 같은 반이자 프로젝트를 같이하는 팀원이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n3', '선혁', 0, 30, 25, 35, 'c3', null, 1, '영균과 같은 반이자 프로젝트를 같이하는 팀원이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n4', '미주', 1, 100, 25, 30, 'c4', null, 1, '숲에서 나오는 보스이다');
@@ -203,15 +203,15 @@ INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n11', '딸깍', 0, 10000, 50, 100, 'c11', null, 1, '일만 시키는 영균이에게 복수하기 위해, 영균이를 JVM 속으로 빨아들였다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n12', '캐시', 1, 100, 25, 30, null, 'i6', 1, '무언가를 많이 가지고 있다.');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n13', 'GC', 1, 100, 25, 55, 'c10', null, 1, '가비지 컬렉터');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n14', '빨간 무당벌래', 1, 50, 5, 15, 'c12', null, 0, '빨간색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n15', '주황 무당벌래', 1, 50, 5, 15, 'c13', null, 0, '주황색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n16', '노랑 무당벌래', 1, 50, 5, 15, 'c14', null, 0, '노란색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n17', '초록 무당벌래', 1, 50, 5, 15, 'c15', null, 0, '초록색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n18', '파랑 무당벌래', 1, 50, 5, 15, 'c16', null, 0, '파란색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n19', '남색 무당벌래', 1, 50, 5, 15, 'c17', null, 0, '남색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n20', '보라 무당벌래', 1, 50, 5, 15, 'c18', null, 0, '보라색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n21', '검정 무당벌래', 1, 50, 5, 15, 'c19', null, 0, '검정색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n22', '흰색 무당벌래', 1, 50, 5, 15, 'c20', null, 0, '흰색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n14', '빨간 무당벌레', 1, 50, 5, 15, 'c12', null, 0, '빨간색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n15', '주황 무당벌레', 1, 50, 5, 15, 'c13', null, 0, '주황색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n16', '노랑 무당벌레', 1, 50, 5, 15, 'c14', null, 0, '노란색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n17', '초록 무당벌레', 1, 50, 5, 15, 'c15', null, 0, '초록색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n18', '파랑 무당벌레', 1, 50, 5, 15, 'c16', null, 0, '파란색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n19', '남색 무당벌레', 1, 50, 5, 15, 'c17', null, 0, '남색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n20', '보라 무당벌레', 1, 50, 5, 15, 'c18', null, 0, '보라색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n21', '검정 무당벌레', 1, 50, 5, 15, 'c19', null, 0, '검정색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n22', '흰색 무당벌레', 1, 50, 5, 15, 'c20', null, 0, '흰색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n23', '빨강 나방', 0, 50, 5, 15, 'c21', null, 0, '빨간색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n24', '주황 나방', 0, 50, 5, 15, 'c22', null, 0, '주황색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n25', '노랑 나방', 0, 50, 5, 15, 'c23', null, 0, '노란색이다');
@@ -230,11 +230,11 @@ INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n38', '보라 파리', 1, 50, 5, 15, 'c36', null, 0, '보라색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n39', '검정 파리', 1, 50, 5, 15, 'c37', null, 0, '검정색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n40', '흰색 파리', 1, 50, 5, 15, 'c38', null, 0, '흰색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n41', '분홍색 무당벌래', 1, 50, 5, 15, null, 'i1', 0, '분홍색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n42', '연두색 무당벌래', 1, 50, 5, 15, null, 'i2', 0, '연두색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n43', '하늘색 무당벌래', 1, 50, 5, 15, null, 'i3', 0, '하늘색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n44', '갈색 무당벌래', 1, 50, 5, 15, null, 'i4', 0, '갈색이다');
-INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n45', '회색 무당벌래', 1, 50, 5, 15, null, 'i5', 0, '회색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n41', '분홍색 무당벌레', 1, 50, 5, 15, null, 'i1', 0, '분홍색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n42', '연두색 무당벌레', 1, 50, 5, 15, null, 'i2', 0, '연두색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n43', '하늘색 무당벌레', 1, 50, 5, 15, null, 'i3', 0, '하늘색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n44', '갈색 무당벌레', 1, 50, 5, 15, null, 'i4', 0, '갈색이다');
+INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n45', '회색 무당벌레', 1, 50, 5, 15, null, 'i5', 0, '회색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n46', '분홍색 나방', 0, 50, 5, 15, null, 'i1', 0, '분홍색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n47', '연두색 나방', 0, 50, 5, 15, null, 'i2', 0, '연두색이다');
 INSERT INTO npc (n_id, n_name, pp, hp, power_min, power_max, c_id, i_id, is_boss, n_desc) VALUES ('n48', '하늘색 나방', 0, 50, 5, 15, null, 'i3', 0, '하늘색이다');
