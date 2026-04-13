@@ -80,7 +80,7 @@ public class GameView {
 
     /** 텍스트를 한 글자씩 출력 (기본 30ms) */
     public boolean printSlow(String text) {
-        return printSlow(text, 30);
+        return printSlow(text, 10);
     }
 
     /** 입력 버퍼를 읽어서 's' 포함 여부 반환 */
@@ -135,13 +135,13 @@ public class GameView {
 
             if (line.isEmpty()) {
                 System.out.println();
-                skip = sleepWithSkipCheck(300);
+                skip = sleepWithSkipCheck(100);
             } else {
                 skip = printSlow(line);
             }
             // 줄 사이 0.3초 대기
             if (!skip && i < lines.size() - 1) {
-                skip = sleepWithSkipCheck(300);
+                skip = sleepWithSkipCheck(100);
             }
         }
 
